@@ -8,10 +8,9 @@ end
 
 local function focus_codex_pane(pane_id)
     local response = vim.system({
-        "sh",
-        "-c",
-        'tmux select-pane -t "$1"',
-        "_",
+        "tmux",
+        "select-pane",
+        "-t",
         pane_id,
     }):wait()
 
@@ -22,11 +21,11 @@ end
 
 local function send_enter(pane_id)
     local response = vim.system({
-        "sh",
-        "-c",
-        'tmux send-keys -t "$1" Enter',
-        "_",
+        "tmux",
+        "send-keys",
+        "-t",
         pane_id,
+        "Enter",
     }):wait()
 
     if response.code ~= 0 then
@@ -69,11 +68,11 @@ function tmux.send_to_codex(text, path)
     end
 
     local send_result = vim.system({
-        "sh",
-        "-c",
-        'tmux send-keys -t "$1" -l "$2"',
-        "_",
+        "tmux",
+        "send-keys",
+        "-t",
         pane_id,
+        "-l",
         text,
     }):wait()
 
@@ -85,8 +84,13 @@ function tmux.send_to_codex(text, path)
         focus_codex_pane(pane_id)
     end
 
+    -- Keep this at bottom + defer timeout to ensure it not overlap with other tmux command
+    -- If no defer_fn sometime it will just send a `\n` char instead of Enter press
+    -- Idk if 50ms is safe across machine, who know? :D
     if config.options.auto_send then
-        send_enter(pane_id)
+        vim.defer_fn(function()
+            send_enter(pane_id)
+        end, 50)
     end
 
     return true
