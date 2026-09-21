@@ -46,8 +46,10 @@ use({
 2. In Neovim, place the cursor on a line or select lines in Visual mode.
 3. Press `<C-a>` and enter your request.
 4. The plugin writes a prompt such as `lua/nvimcodex/init.lua:L35 - explain
-this function` into the Codex pane and focuses it.
-5. Press `<Enter>` in Codex to submit the prompt.
+this function` into the Codex pane.
+5. By default, the plugin submits the prompt automatically. Set `auto_send` to
+   `false` if you want to press `<Enter>` in Codex yourself, and enable
+   `auto_focus_codex` if you also want to switch focus to the Codex pane.
 
 In Normal mode, the current line is sent. In Visual mode, the selected line
 range is sent. The plugin uses `Snacks.input()` when
@@ -71,10 +73,19 @@ Available options:
 ```lua
 require("nvimcodex").setup({
   debug = false,
+  auto_send = true,
+  auto_focus_codex = false,
 })
 ```
 
-Set `debug = true` to enable diagnostic notifications.
+Available options:
+
+- `debug`: Set to `true` to enable diagnostic notifications. Defaults to
+  `false`.
+- `auto_send`: Press `<Enter>` in the Codex pane after sending the prompt.
+  Defaults to `true`.
+- `auto_focus_codex`: Focus the Codex pane after sending the prompt. Defaults
+  to `false`.
 
 ## Commands and API
 
