@@ -1,5 +1,5 @@
-Nvimcodex.disable()	nvimcodex.txt	/*Nvimcodex.disable()*
-Nvimcodex.enable()	nvimcodex.txt	/*Nvimcodex.enable()*
-Nvimcodex.options	nvimcodex.txt	/*Nvimcodex.options*
-Nvimcodex.setup()	nvimcodex.txt	/*Nvimcodex.setup()*
-Nvimcodex.toggle()	nvimcodex.txt	/*Nvimcodex.toggle()*
+Nvimcodex.disable()	nvim-codex.txt	/*Nvimcodex.disable()*
+Nvimcodex.enable()	nvim-codex.txt	/*Nvimcodex.enable()*
+Nvimcodex.options	nvim-codex.txt	/*Nvimcodex.options*
+Nvimcodex.setup()	nvim-codex.txt	/*Nvimcodex.setup()*
+Nvimcodex.toggle()	nvim-codex.txt	/*Nvimcodex.toggle()*
