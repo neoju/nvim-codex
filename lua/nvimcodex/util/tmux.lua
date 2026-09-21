@@ -1,7 +1,36 @@
+local config = require("nvimcodex.config")
+
 local tmux = {}
 
 local function normalize_path(path)
     return vim.fn.resolve(vim.fn.fnamemodify(path, ":p"))
+end
+
+local function focus_codex_pane(pane_id)
+    local response = vim.system({
+        "tmux",
+        "select-pane",
+        "-t",
+        pane_id,
+    }):wait()
+
+    if response.code ~= 0 then
+        vim.notify(response.stderr, vim.log.levels.WARN)
+    end
+end
+
+local function send_enter(pane_id)
+    local response = vim.system({
+        "tmux",
+        "send-keys",
+        "-t",
+        pane_id,
+        "Enter",
+    }):wait()
+
+    if response.code ~= 0 then
+        vim.notify(response.stderr, vim.log.levels.WARN)
+    end
 end
 
 function tmux.is_available()
@@ -51,15 +80,17 @@ function tmux.send_to_codex(text, path)
         return false, send_result.stderr
     end
 
-    local select_result = vim.system({
-        "tmux",
-        "select-pane",
-        "-t",
-        pane_id,
-    }):wait()
+    if config.options.auto_focus_codex then
+        focus_codex_pane(pane_id)
+    end
 
-    if select_result.code ~= 0 then
-        return false, select_result.stderr
+    -- Keep this at bottom + defer timeout to ensure it not overlap with other tmux command
+    -- If no defer_fn sometime it will just send a `\n` char instead of Enter press
+    -- Idk if 50ms is safe across machine, who know? :D
+    if config.options.auto_send then
+        vim.defer_fn(function()
+            send_enter(pane_id)
+        end, 50)
     end
 
     return true

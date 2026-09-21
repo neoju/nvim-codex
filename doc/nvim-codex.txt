@@ -26,6 +26,12 @@ Default values:
   Nvimcodex.options = {
       -- Prints useful logs about what event are triggered, and reasons actions are executed.
       debug = false,
+
+      -- Auto trigger Enter key after send user's input to Codex pane
+      auto_send = true,
+
+      -- Auto focus to Codex pane after input
+      auto_focus_codex = false,
   }
 
 <
