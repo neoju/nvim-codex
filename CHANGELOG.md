@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/neoju/nvim-codex/compare/v1.0.0...v1.1.0) (2026-09-21)
+
+
+### Features
+
+* add new config options ([3b9f42d](https://github.com/neoju/nvim-codex/commit/3b9f42d9f4e9be2a583688003805b88fd5857da3))
+
+
+### Bug Fixes
+
+* tmux commands overlapping ([50d24f9](https://github.com/neoju/nvim-codex/commit/50d24f990622eebdc3e7e3c06e40ac120ae140bb))
+
 ## 1.0.0 (2026-09-21)
 
 
