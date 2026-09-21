@@ -1,7 +1,37 @@
+local config = require("nvimcodex.config")
+
 local tmux = {}
 
 local function normalize_path(path)
     return vim.fn.resolve(vim.fn.fnamemodify(path, ":p"))
+end
+
+local function focus_codex_pane(pane_id)
+    local response = vim.system({
+        "sh",
+        "-c",
+        'tmux select-pane -t "$1"',
+        "_",
+        pane_id,
+    }):wait()
+
+    if response.code ~= 0 then
+        vim.notify(response.stderr, vim.log.levels.WARN)
+    end
+end
+
+local function send_enter(pane_id)
+    local response = vim.system({
+        "sh",
+        "-c",
+        'tmux send-keys -t "$1" Enter',
+        "_",
+        pane_id,
+    }):wait()
+
+    if response.code ~= 0 then
+        vim.notify(response.stderr, vim.log.levels.WARN)
+    end
 end
 
 function tmux.is_available()
@@ -39,11 +69,11 @@ function tmux.send_to_codex(text, path)
     end
 
     local send_result = vim.system({
-        "tmux",
-        "send-keys",
-        "-t",
+        "sh",
+        "-c",
+        'tmux send-keys -t "$1" -l "$2"',
+        "_",
         pane_id,
-        "-l",
         text,
     }):wait()
 
@@ -51,15 +81,12 @@ function tmux.send_to_codex(text, path)
         return false, send_result.stderr
     end
 
-    local select_result = vim.system({
-        "tmux",
-        "select-pane",
-        "-t",
-        pane_id,
-    }):wait()
+    if config.options.auto_focus_codex then
+        focus_codex_pane(pane_id)
+    end
 
-    if select_result.code ~= 0 then
-        return false, select_result.stderr
+    if config.options.auto_send then
+        send_enter(pane_id)
     end
 
     return true
