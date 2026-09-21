@@ -1,132 +1,107 @@
-<p align="center">
-  <h1 align="center">nvimcodex</h2>
-</p>
+# nvim-codex
 
-<p align="center">
-    > A catch phrase that describes your plugin.
-</p>
+Send file context from Neovim to an open [Codex CLI](https://github.com/openai/codex)
+session in tmux.
 
-<div align="center">
-    > Drag your video (<10MB) here to host it for free on GitHub.
-</div>
+`nvim-codex` turns the current line or visual selection into a location-aware
+prompt, then places it in the matching Codex pane. It is intentionally small:
+you keep working in Neovim, while Codex receives the exact place you want to
+discuss.
 
-<div align="center">
+## Requirements
 
-> Videos don't work on GitHub mobile, so a GIF alternative can help users.
+- Neovim 0.10 or later
+- [tmux](https://github.com/tmux/tmux)
+- [Codex CLI](https://github.com/openai/codex), running in a tmux pane
 
-_[GIF version of the showcase video for mobile users](SHOWCASE_GIF_LINK)_
+Neovim and Codex must be in the same tmux window. The Codex pane must be
+running in the same working directory as Neovim. The plugin finds panes by
+their current command (`codex`) and current directory.
 
-</div>
+## Installation
 
-## ⚡️ Features
-
-> Write short sentences describing your plugin features
-
-- FEATURE 1
-- FEATURE ..
-- FEATURE N
-
-## 📋 Installation
-
-<div align="center">
-<table>
-<thead>
-<tr>
-<th>Package manager</th>
-<th>Snippet</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-
-[wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim)
-
-</td>
-<td>
+With [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
--- stable version
-use {"nvimcodex", tag = "*" }
--- dev version
-use {"nvimcodex"}
+{
+  "neoju/nvim-codex",
+}
 ```
 
-</td>
-</tr>
-<tr>
-<td>
-
-[junegunn/vim-plug](https://github.com/junegunn/vim-plug)
-
-</td>
-<td>
+With [packer.nvim](https://github.com/wbthomason/packer.nvim):
 
 ```lua
--- stable version
-Plug "nvimcodex", { "tag": "*" }
--- dev version
-Plug "nvimcodex"
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-[folke/lazy.nvim](https://github.com/folke/lazy.nvim)
-
-</td>
-<td>
-
-```lua
--- stable version
-require("lazy").setup({{"nvimcodex", version = "*"}})
--- dev version
-require("lazy").setup({"nvimcodex"})
-```
-
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-## ☄ Getting started
-
-> Describe how to use the plugin the simplest way
-
-## ⚙ Configuration
-
-> The configuration list sometimes become cumbersome, making it folded by default reduce the noise of the README file.
-
-<details>
-<summary>Click to unfold the full list of options with their default values</summary>
-
-> **Note**: The options are also available in Neovim by calling `:h nvimcodex.options`
-
-```lua
-require("nvimcodex").setup({
-    -- you can copy the full list from lua/nvimcodex/config.lua
+use({
+  "neoju/nvim-codex",
+  config = function()
+    require("nvimcodex").setup()
+  end,
 })
 ```
 
-</details>
+## Usage
 
-## 🧰 Commands
+1. Start Neovim and Codex in separate panes of the same tmux window, both in
+   the project directory.
+2. In Neovim, place the cursor on a line or select lines in Visual mode.
+3. Press `<C-a>` and enter your request.
+4. The plugin writes a prompt such as `lua/nvimcodex/init.lua:L35 - explain
+this function` into the Codex pane and focuses it.
+5. Press `<Enter>` in Codex to submit the prompt.
 
-|   Command   |         Description        |
-|-------------|----------------------------|
-|  `:Toggle`  |     Enables the plugin.    |
+In Normal mode, the current line is sent. In Visual mode, the selected line
+range is sent. The plugin uses `Snacks.input()` when
+[snacks.nvim](https://github.com/folke/snacks.nvim) is available; otherwise it
+uses Neovim's built-in `vim.ui.input()`.
 
-## ⌨ Contributing
+If no matching Codex pane is found, the plugin shows a warning. Check that
+Codex is running, that both panes share a tmux window, and that their working
+directories match.
 
-PRs and issues are always welcome. Make sure to provide as much context as possible when opening one.
+## Configuration
 
-## 🗞 Wiki
+The default setup is enough for most users:
 
-You can find guides and showcase of the plugin on [the Wiki](https://github.com/neoju/nvimcodex/wiki)
+```lua
+require("nvimcodex").setup()
+```
 
-## 🎭 Motivations
+Available options:
 
-> If alternatives of your plugin exist, you can provide some pros/cons of using yours over the others.
+```lua
+require("nvimcodex").setup({
+  debug = false,
+})
+```
+
+Set `debug = true` to enable diagnostic notifications.
+
+## Commands and API
+
+`:Nvimcodex` toggles the plugin's internal enabled state. The public Lua API is
+also available through `require("nvimcodex")`:
+
+```lua
+local codex = require("nvimcodex")
+
+codex.send_to_codex()
+codex.enable()
+codex.disable()
+codex.toggle()
+```
+
+Run `:help Nvimcodex.options` for the generated option documentation.
+
+## Contributing
+
+Run the test suite with:
+
+```sh
+make test
+```
+
+Please include a focused description and reproduction steps with bug reports.
+
+## License
+
+[MIT](LICENSE)
