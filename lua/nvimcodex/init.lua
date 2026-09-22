@@ -17,11 +17,6 @@ function Nvimcodex.send()
     require("nvimcodex.prompt").send()
 end
 
---- Alias of `send`, kept for backward compatibility.
-function Nvimcodex.send_to_codex()
-    Nvimcodex.send()
-end
-
 --- Rescans the skill directories and refreshes the completion cache.
 function Nvimcodex.reload_skills(callback)
     skills.reload(callback)

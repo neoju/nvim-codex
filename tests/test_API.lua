@@ -40,7 +40,6 @@ T["setup()"]["sets exposed methods and default options value"] = function()
     -- public methods
     Helpers.expect.global_type(child, "require('nvimcodex').setup", "function")
     Helpers.expect.global_type(child, "require('nvimcodex').send", "function")
-    Helpers.expect.global_type(child, "require('nvimcodex').send_to_codex", "function")
     Helpers.expect.global_type(child, "require('nvimcodex').reload_skills", "function")
 
     -- config

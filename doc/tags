@@ -7,7 +7,6 @@ M.setup()	nvim-codex.txt	/*M.setup()*
 Nvimcodex.options	nvim-codex.txt	/*Nvimcodex.options*
 Nvimcodex.reload_skills()	nvim-codex.txt	/*Nvimcodex.reload_skills()*
 Nvimcodex.send()	nvim-codex.txt	/*Nvimcodex.send()*
-Nvimcodex.send_to_codex()	nvim-codex.txt	/*Nvimcodex.send_to_codex()*
 Nvimcodex.setup()	nvim-codex.txt	/*Nvimcodex.setup()*
 commands.apply()	nvim-codex.txt	/*commands.apply()*
 label_details()	nvim-codex.txt	/*label_details()*

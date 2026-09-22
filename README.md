@@ -1,12 +1,9 @@
 # nvim-codex
 
-Send file context from Neovim to an open [Codex CLI](https://github.com/openai/codex)
-session in tmux.
-
-`nvim-codex` turns the current line or visual selection into a location-aware
-prompt, then places it in the matching Codex pane. It is intentionally small:
-you keep working in Neovim, while Codex receives the exact place you want to
-discuss.
+`nvim-codex` sends your current line or Visual selection, with its file
+location, to an open [Codex CLI](https://github.com/openai/codex) session in
+tmux. Write a request in Neovim and send it to the matching Codex pane without
+copying code or file paths by hand.
 
 ## Requirements
 
@@ -27,7 +24,10 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
   "neoju/nvim-codex",
-  dependencies = { "folke/snacks.nvim" },
+  dependencies = {
+    "folke/snacks.nvim",
+    "saghen/blink.cmp", -- optional, for prompt completion
+  },
 }
 ```
 
@@ -36,7 +36,10 @@ With [packer.nvim](https://github.com/wbthomason/packer.nvim):
 ```lua
 use({
   "neoju/nvim-codex",
-  requires = { "folke/snacks.nvim" },
+  requires = {
+    "folke/snacks.nvim",
+    "saghen/blink.cmp", -- optional, for prompt completion
+  },
   config = function()
     require("nvimcodex").setup()
   end,
@@ -65,21 +68,22 @@ directories match.
 
 ## Configuration
 
-The default setup is enough for most users:
+With LazyVim, add `lua/plugins/nvim-codex.lua`:
 
 ```lua
-require("nvimcodex").setup()
-```
-
-Available options:
-
-```lua
-require("nvimcodex").setup({
-  debug = false,
-  auto_send = true,
-  auto_focus_codex = false,
-  keymap = "<C-a>",
-})
+return {
+  "neoju/nvim-codex",
+  dependencies = {
+    "folke/snacks.nvim",
+    "saghen/blink.cmp", -- optional, for prompt completion
+  },
+  opts = {
+    debug = false,
+    auto_send = true,
+    auto_focus_codex = false,
+    keymap = "<C-a>",
+  },
+}
 ```
 
 Available options:
@@ -95,40 +99,39 @@ Available options:
 
 ## Completion
 
-If [blink.cmp](https://github.com/Saghen/blink.cmp) is installed, the ask
-prompt enables completion automatically (the buffer uses the `nvimcodex_ask`
-filetype with only this plugin's source active):
+If [blink.cmp](https://github.com/Saghen/blink.cmp) is installed, completion is
+registered automatically for the prompt. Available entries are:
 
-- `$<name>` completes Codex skills scanned from `<cwd>/.codex/skills`,
-  `<cwd>/.agents/skills`, `$CODEX_HOME/skills` (or `~/.codex/skills`, including
-  `.system/` built-ins), `~/.agents/skills`, and
-  `$CODEX_HOME/plugins/cache/*/*/*/skills` (plugin skills, lowest precedence).
-  Directories are scanned in
-  that order and the first occurrence of a skill name wins, so project skills
-  shadow user ones. Entries may be symlinks. Skills are scanned the first time
-  the prompt opens and re-scanned after `DirChanged`; force a rescan with
-  `:lua require("nvimcodex").reload_skills()`.
-- `@buffer` targets the whole current file (relative path, no line range).
-- `@ask` tells Codex to answer the request without editing files.
-- `@explain` tells Codex to explain the selected code and its surrounding context without editing files.
+| Entry | Purpose |
+| --- | --- |
+| `$<skill>` | Include a Codex skill. Project skills take precedence over user and plugin skills. |
+| `@buffer` | Target the current file, without a line range. |
+| `@ask` | Ask Codex to answer without editing files. |
+| `@explain` | Ask Codex to explain the selected code and its surrounding context. |
 
-If automatic registration does not work with your blink.cmp setup, configure
-the source manually:
+Skills are loaded when the prompt first opens and refreshed after `DirChanged`.
+To rescan them manually, run `:lua require("nvimcodex").reload_skills()`.
+
+If automatic registration does not work with your blink.cmp setup, add this
+LazyVim plugin spec to `lua/plugins/blink.lua`:
 
 ```lua
-require("blink.cmp").setup({
-  sources = {
-    per_filetype = {
-      nvimcodex_ask = { "nvimcodex" },
-    },
-    providers = {
-      nvimcodex = {
-        name = "NvimCodex",
-        module = "nvimcodex.integrations.blink",
+return {
+  "saghen/blink.cmp",
+  opts = {
+    sources = {
+      per_filetype = {
+        nvimcodex_ask = { "nvimcodex" },
+      },
+      providers = {
+        nvimcodex = {
+          name = "NvimCodex",
+          module = "nvimcodex.integrations.blink",
+        },
       },
     },
   },
-})
+}
 ```
 
 ## Commands and API
@@ -141,7 +144,6 @@ local codex = require("nvimcodex")
 
 codex.setup()
 codex.send()
-codex.send_to_codex() -- alias of send()
 codex.reload_skills()
 ```
 
