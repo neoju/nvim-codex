@@ -10,7 +10,7 @@ discuss.
 
 ## Requirements
 
-- Neovim 0.10 or later
+- Neovim 0.10.1 or later
 - [snacks.nvim](https://github.com/folke/snacks.nvim)
 - [tmux](https://github.com/tmux/tmux)
 - [Codex CLI](https://github.com/openai/codex), running in a tmux pane
