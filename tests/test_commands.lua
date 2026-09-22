@@ -47,6 +47,27 @@ T["commands.apply()"]["@ask wraps the request as a read-only question"] = functi
     Helpers.expect.equality(result.text, "Question: what does this do")
 end
 
+T["commands.apply()"]["@ask without a question logs an error and cancels the prompt"] = function()
+    child.lua([[
+        _G.notifications = {}
+        vim.notify = function(message, level)
+            table.insert(_G.notifications, { message = message, level = level })
+        end
+        _G.empty_ask = require("nvimcodex.prompt.commands").apply({
+            filepath = "lua/foo.lua",
+            location = "lua/foo.lua:L3",
+        }, "@ask   ")
+    ]])
+
+    Helpers.expect.equality(child.lua_get("_G.empty_ask == nil"), true)
+    Helpers.expect.equality(child.lua_get("#_G.notifications"), 1)
+    Helpers.expect.equality(child.lua_get("_G.notifications[1].level"), vim.log.levels.ERROR)
+    Helpers.expect.equality(
+        child.lua_get("_G.notifications[1].message"),
+        "[nvimcodex.nvim@commands] @ask requires a question"
+    )
+end
+
 T["commands.apply()"]["@explain clears the text and sets an explanation goal"] = function()
     local result = child.lua_get([[_G.apply("@explain this function")]])
     Helpers.expect.equality(result.prefix, explain_prefix)

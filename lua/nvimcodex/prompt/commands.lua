@@ -1,3 +1,5 @@
+local log = require("nvimcodex.log")
+
 local commands = {}
 
 commands.list = {
@@ -9,6 +11,7 @@ commands.list = {
     },
     ask = {
         description = "Answer a request without editing files",
+        requires_value = true,
         apply = function(ctx)
             ctx.prefix = table.concat({
                 "Goal: Answer the request below.",
@@ -36,10 +39,13 @@ commands.list = {
 --- and returns `ctx, cleaned_text`. Unknown `@foo` tokens are left untouched.
 function commands.apply(ctx, text)
     ctx.value = text
+    local requires_value = false
+
     for name in ctx.value:gmatch("@(%w+)") do
         local command = commands.list[name]
 
         if command then
+            requires_value = requires_value or command.requires_value
             command.apply(ctx)
             ctx.value = ctx.value:gsub("@" .. name .. "%f[%W]", "", 1)
         end
@@ -47,6 +53,11 @@ function commands.apply(ctx, text)
 
     ctx.value = ctx.value:gsub("%s%s+", " ")
     ctx.value = vim.trim(ctx.value)
+
+    if requires_value and ctx.value == "Question:" then
+        log.notify("commands", vim.log.levels.ERROR, true, "@ask requires a question")
+        return nil
+    end
 
     return ctx
 end

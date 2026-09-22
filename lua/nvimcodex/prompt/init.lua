@@ -50,6 +50,10 @@ function M.send()
         end
 
         ctx = commands.apply(ctx, value)
+        if ctx == nil then
+            return
+        end
+
         local text = format.render(ctx)
 
         local sent, error_message = tmux.send(text, vim.fn.getcwd())
