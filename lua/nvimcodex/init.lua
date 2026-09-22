@@ -1,6 +1,9 @@
 local main = require("nvimcodex.main")
 local config = require("nvimcodex.config")
-local utils = require("nvimcodex.util")
+local log = require("nvimcodex.util.log")
+
+local tmux = require("nvimcodex.lib.tmux")
+local input = require("nvimcodex.lib.input")
 
 local Nvimcodex = {}
 
@@ -52,7 +55,7 @@ function Nvimcodex.send_to_codex()
     local location = start_line == end_line and string.format("%s:L%d", filepath, start_line)
         or string.format("%s:L%d-L%d", filepath, start_line, end_line)
 
-    utils.input.open({
+    input.open({
         prompt = "Ask Codex: ",
         win = {
             relative = "cursor",
@@ -66,17 +69,13 @@ function Nvimcodex.send_to_codex()
 
         local text = string.format("%s - %s", location, value)
 
-        local sent, error_message = utils.tmux.send_to_codex(text, vim.fn.getcwd())
+        local sent, error_message = tmux.send_to_codex(text, vim.fn.getcwd())
         if not sent then
-            vim.notify(error_message, vim.log.levels.WARN)
+            log.notify("send_to_codex", vim.log.levels.WARN, true, "%s", error_message)
         end
     end)
 end
 
 _G.Nvimcodex = Nvimcodex
-
-vim.keymap.set({ "n", "x" }, "<C-a>", Nvimcodex.send_to_codex, {
-    desc = "Send current context to Codex",
-})
 
 return _G.Nvimcodex

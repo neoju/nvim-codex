@@ -1,4 +1,5 @@
 local config = require("nvimcodex.config")
+local log = require("nvimcodex.util.log")
 
 local tmux = {}
 
@@ -15,7 +16,7 @@ local function focus_codex_pane(pane_id)
     }):wait()
 
     if response.code ~= 0 then
-        vim.notify(response.stderr, vim.log.levels.WARN)
+        log.notify("tmux", vim.log.levels.WARN, true, "%s", response.stderr)
     end
 end
 
@@ -29,7 +30,7 @@ local function send_enter(pane_id)
     }):wait()
 
     if response.code ~= 0 then
-        vim.notify(response.stderr, vim.log.levels.WARN)
+        log.notify("tmux", vim.log.levels.WARN, true, "%s", response.stderr)
     end
 end
 
@@ -62,6 +63,10 @@ function tmux.find_codex_pane(path)
 end
 
 function tmux.send_to_codex(text, path)
+    if not tmux.is_available() then
+        return false, "tmux is not executable"
+    end
+
     local pane_id, error_message = tmux.find_codex_pane(path)
     if pane_id == nil then
         return false, error_message
@@ -84,13 +89,9 @@ function tmux.send_to_codex(text, path)
         focus_codex_pane(pane_id)
     end
 
-    -- Keep this at bottom + defer timeout to ensure it not overlap with other tmux command
-    -- If no defer_fn sometime it will just send a `\n` char instead of Enter press
-    -- Idk if 50ms is safe across machine, who know? :D
     if config.options.auto_send then
-        vim.defer_fn(function()
-            send_enter(pane_id)
-        end, 50)
+        vim.wait(50)
+        send_enter(pane_id)
     end
 
     return true

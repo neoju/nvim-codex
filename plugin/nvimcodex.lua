@@ -5,8 +5,12 @@ end
 
 _G.NvimcodexLoaded = true
 
-require("nvimcodex")
-
 vim.api.nvim_create_user_command("Nvimcodex", function()
     require("nvimcodex").toggle()
 end, {})
+
+vim.keymap.set({ "n", "x" }, "<C-a>", function()
+    require("nvimcodex").send_to_codex()
+end, {
+    desc = "Send current context to Codex",
+})

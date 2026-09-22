@@ -11,6 +11,7 @@ discuss.
 ## Requirements
 
 - Neovim 0.10 or later
+- [snacks.nvim](https://github.com/folke/snacks.nvim)
 - [tmux](https://github.com/tmux/tmux)
 - [Codex CLI](https://github.com/openai/codex), running in a tmux pane
 
@@ -25,6 +26,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
   "neoju/nvim-codex",
+  dependencies = { "folke/snacks.nvim" },
 }
 ```
 
@@ -33,6 +35,7 @@ With [packer.nvim](https://github.com/wbthomason/packer.nvim):
 ```lua
 use({
   "neoju/nvim-codex",
+  requires = { "folke/snacks.nvim" },
   config = function()
     require("nvimcodex").setup()
   end,
@@ -52,9 +55,8 @@ this function` into the Codex pane.
    `auto_focus_codex` if you also want to switch focus to the Codex pane.
 
 In Normal mode, the current line is sent. In Visual mode, the selected line
-range is sent. The plugin uses `Snacks.input()` when
-[snacks.nvim](https://github.com/folke/snacks.nvim) is available; otherwise it
-uses Neovim's built-in `vim.ui.input()`.
+range is sent. The plugin uses `Snacks.input()` for prompts; `snacks.nvim` is a
+required dependency.
 
 If no matching Codex pane is found, the plugin shows a warning. Check that
 Codex is running, that both panes share a tmux window, and that their working
