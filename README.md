@@ -78,6 +78,7 @@ require("nvimcodex").setup({
   debug = false,
   auto_send = true,
   auto_focus_codex = false,
+  keymap = "<C-a>",
 })
 ```
 
@@ -89,6 +90,8 @@ Available options:
   Defaults to `true`.
 - `auto_focus_codex`: Focus the Codex pane after sending the prompt. Defaults
   to `false`.
+- `keymap`: Normal/Visual mode mapping that opens the prompt. Defaults to
+  `"<C-a>"`; set to `false` to disable the mapping.
 
 ## Completion
 
@@ -102,8 +105,8 @@ filetype with only this plugin's source active):
   `$CODEX_HOME/plugins/cache/*/*/*/skills` (plugin skills, lowest precedence).
   Directories are scanned in
   that order and the first occurrence of a skill name wins, so project skills
-  shadow user ones. Entries may be symlinks. Skills are loaded asynchronously
-  at startup and re-scanned on `DirChanged`; force a rescan with
+  shadow user ones. Entries may be symlinks. Skills are scanned the first time
+  the prompt opens and re-scanned after `DirChanged`; force a rescan with
   `:lua require("nvimcodex").reload_skills()`.
 - `@buffer` targets the whole current file (relative path, no line range).
 - `@ask` tells Codex to answer the request without editing files.
@@ -121,7 +124,7 @@ require("blink.cmp").setup({
     providers = {
       nvimcodex = {
         name = "NvimCodex",
-        module = "nvimcodex.cmp.blink",
+        module = "nvimcodex.integrations.blink",
       },
     },
   },
@@ -130,16 +133,15 @@ require("blink.cmp").setup({
 
 ## Commands and API
 
-`:Nvimcodex` toggles the plugin's internal enabled state. The public Lua API is
-also available through `require("nvimcodex")`:
+`:Nvimcodex` opens the prompt. The public Lua API is also available through
+`require("nvimcodex")`:
 
 ```lua
 local codex = require("nvimcodex")
 
-codex.send_to_codex()
-codex.enable()
-codex.disable()
-codex.toggle()
+codex.setup()
+codex.send()
+codex.send_to_codex() -- alias of send()
 codex.reload_skills()
 ```
 

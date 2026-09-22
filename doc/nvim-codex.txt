@@ -1,16 +1,19 @@
-                                                            *Nvimcodex.toggle()*
-                              `Nvimcodex.toggle`()
-Toggle the plugin by calling the `enable`/`disable` methods respectively.
+                                                             *Nvimcodex.setup()*
+                           `Nvimcodex.setup`({opts})
+Setup Nvimcodex options and merge them with user provided ones.
+
+Parameters ~
+{opts} `(table)` Module config table. See |Nvimcodex.options|.
 
 ------------------------------------------------------------------------------
-                                                            *Nvimcodex.enable()*
-                          `Nvimcodex.enable`({scope})
-Initializes the plugin, sets event listeners and internal state.
+                                                              *Nvimcodex.send()*
+                               `Nvimcodex.send`()
+Opens the prompt and sends the result to the Codex pane.
 
 ------------------------------------------------------------------------------
-                                                           *Nvimcodex.disable()*
-                             `Nvimcodex.disable`()
-Disables the plugin, clear highlight groups and autocmds, closes side buffers and resets the internal state.
+                                                     *Nvimcodex.send_to_codex()*
+                          `Nvimcodex.send_to_codex`()
+Alias of `send`, kept for backward compatibility.
 
 ------------------------------------------------------------------------------
                                                      *Nvimcodex.reload_skills()*
@@ -21,14 +24,10 @@ Rescans the skill directories and refreshes the completion cache.
 ==============================================================================
 ------------------------------------------------------------------------------
                                                              *Nvimcodex.options*
-                              `Nvimcodex.options`
+                                  `M.options`
 Nvimcodex configuration with its default values.
-
-Type ~
-`(table)`
-Default values:
 >lua
-  Nvimcodex.options = {
+  M.options = {
       -- Prints useful logs about what event are triggered, and reasons actions are executed.
       debug = false,
 
@@ -37,12 +36,15 @@ Default values:
 
       -- Auto focus to Codex pane after input
       auto_focus_codex = false,
+
+      -- Normal/Visual mode mapping that opens the prompt. Set to `false` to disable.
+      keymap = "<C-a>",
   }
 
 <
 ------------------------------------------------------------------------------
-                                                             *Nvimcodex.setup()*
-                          `Nvimcodex.setup`({options})
+                                                                     *M.setup()*
+                              `M.setup`({options})
 Define your nvimcodex setup.
 
 Parameters ~
@@ -54,27 +56,10 @@ Usage ~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                               *label_details()*
-                         `label_details`({description})
-Descriptions are rendered inline (blink's `label_description` column, which
-truncates on its own) instead of a documentation popup, so the menu stays
-stable while typing.
-
-
-==============================================================================
-------------------------------------------------------------------------------
-                                                              *commands.apply()*
-                        `commands.apply`({ctx}, {text})
-Rewrites `ctx` for each known `@name` token in `text`, strips those tokens,
-and returns `ctx, cleaned_text`. Unknown `@foo` tokens are left untouched.
-
-
-==============================================================================
-------------------------------------------------------------------------------
-                                                              *register_blink()*
-                               `register_blink`()
-Registers the `nvimcodex` blink.cmp source and enables it (exclusively) for
-the `nvimcodex_ask` filetype. Idempotent and a no-op when blink is absent.
+                                                                     *M.apply()*
+                                  `M.apply`()
+Applies the configured `keymap` option, removing the previously applied
+mapping first so repeated `setup()` calls switch keys cleanly.
 
 
 ==============================================================================
@@ -96,6 +81,72 @@ the first `---` line and the next `---` line.
 Scans all roots on the next event-loop turn and fills the cache. Results are
 collected per root and merged in `dirs()` order, so root precedence is
 deterministic.
+
+------------------------------------------------------------------------------
+                                                           *skills.invalidate()*
+                             `skills.invalidate`()
+Clears the cache so the next `ensure_loaded` rescans; does not scan itself.
+
+------------------------------------------------------------------------------
+                                                        *skills.ensure_loaded()*
+                       `skills.ensure_loaded`({callback})
+Calls `callback` with the cache immediately when already loaded, otherwise
+kicks off a scan first. Used to load skills lazily on first prompt open.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                               *label_details()*
+                         `label_details`({description})
+Descriptions are rendered inline (blink's `label_description` column, which
+truncates on its own) instead of a documentation popup, so the menu stays
+stable while typing.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                            *M.selected_paths()*
+                              `M.selected_paths`()
+Returns the relative paths of the Neo-tree nodes under the visual
+selection, or under the cursor line when not in visual mode. Returns an
+empty list when neo-tree is not available.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                   *M.capture()*
+                                 `M.capture`()
+Captures the current context: relative file path plus a visual line range,
+or the selected Neo-tree paths when the current buffer is a neo-tree one.
+
+------------------------------------------------------------------------------
+                                                                      *M.send()*
+                                   `M.send`()
+Captures the context, asks the user for input, then formats and sends the
+resulting prompt to the Codex tmux pane.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                              *commands.apply()*
+                        `commands.apply`({ctx}, {text})
+Rewrites `ctx` for each known `@name` token in `text`, strips those tokens,
+and returns `ctx, cleaned_text`. Unknown `@foo` tokens are left untouched.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                    *M.render()*
+                               `M.render`({ctx})
+Renders a prompt context into the text sent to Codex. Pure function.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                              *register_blink()*
+                               `register_blink`()
+Registers the `nvimcodex` blink.cmp source and enables it (exclusively) for
+the `nvimcodex_ask` filetype. Idempotent and a no-op when blink is absent.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

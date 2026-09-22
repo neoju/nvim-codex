@@ -1,13 +1,9 @@
-local log = require("nvimcodex.util.log")
-
-local Nvimcodex = {}
+local M = {}
 
 --- Nvimcodex configuration with its default values.
----
----@type table
---- Default values:
+---@tag Nvimcodex.options
 ---@eval return MiniDoc.afterlines_to_code(MiniDoc.current.eval_section)
-Nvimcodex.options = {
+M.options = {
     -- Prints useful logs about what event are triggered, and reasons actions are executed.
     debug = false,
 
@@ -16,39 +12,30 @@ Nvimcodex.options = {
 
     -- Auto focus to Codex pane after input
     auto_focus_codex = false,
+
+    -- Normal/Visual mode mapping that opens the prompt. Set to `false` to disable.
+    keymap = "<C-a>",
 }
 
 ---@private
-local defaults = vim.deepcopy(Nvimcodex.options)
-
---- Defaults Nvimcodex options by merging user provided options with the default plugin values.
----
----@param options table Module config table. See |Nvimcodex.options|.
----
----@private
-function Nvimcodex.defaults(options)
-    Nvimcodex.options = vim.deepcopy(vim.tbl_deep_extend("keep", options or {}, defaults or {}))
-
-    -- let your user know that they provided a wrong value, this is reported when your plugin is executed.
-    assert(
-        type(Nvimcodex.options.debug) == "boolean",
-        "`debug` must be a boolean (`true` or `false`)."
-    )
-
-    return Nvimcodex.options
-end
+local defaults = vim.deepcopy(M.options)
 
 --- Define your nvimcodex setup.
 ---
 ---@param options table Module config table. See |Nvimcodex.options|.
 ---
 ---@usage `require("nvimcodex").setup()` (add `{}` with your |Nvimcodex.options| table)
-function Nvimcodex.setup(options)
-    Nvimcodex.options = Nvimcodex.defaults(options or {})
+function M.setup(options)
+    M.options = vim.tbl_deep_extend("keep", vim.deepcopy(options or {}), defaults)
 
-    log.warn_deprecation(Nvimcodex.options)
+    -- let your user know that they provided a wrong value, this is reported when your plugin is executed.
+    assert(type(M.options.debug) == "boolean", "`debug` must be a boolean (`true` or `false`).")
+    assert(
+        M.options.keymap == false or type(M.options.keymap) == "string",
+        "`keymap` must be a string or `false`."
+    )
 
-    return Nvimcodex.options
+    return M.options
 end
 
-return Nvimcodex
+return M

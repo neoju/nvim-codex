@@ -2,6 +2,7 @@ local skills = {}
 
 local cache = {}
 local loading = false
+local loaded = false
 local pending_callbacks = {}
 
 --- Ordered skill roots, project-local first so project skills shadow user ones
@@ -85,6 +86,7 @@ function skills.load(callback)
         end)
         cache = out
         loading = false
+        loaded = true
         local callbacks = pending_callbacks
         pending_callbacks = {}
         for _, cb in ipairs(callbacks) do
@@ -181,6 +183,24 @@ end
 
 function skills.get()
     return cache
+end
+
+--- Clears the cache so the next `ensure_loaded` rescans; does not scan itself.
+function skills.invalidate()
+    cache = {}
+    loaded = false
+end
+
+--- Calls `callback` with the cache immediately when already loaded, otherwise
+--- kicks off a scan first. Used to load skills lazily on first prompt open.
+function skills.ensure_loaded(callback)
+    if loaded then
+        if callback then
+            callback(cache)
+        end
+        return
+    end
+    skills.load(callback)
 end
 
 function skills.reload(callback)

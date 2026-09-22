@@ -21,31 +21,31 @@ T["setup()"] = MiniTest.new_set()
 
 T["plugin loading"] = MiniTest.new_set()
 
-T["plugin loading"]["registers the Ctrl-A mapping"] = function()
+T["plugin loading"]["maps <C-a> in normal and visual mode without setup"] = function()
     Helpers.expect.global(
         child,
         "vim.fn.maparg('<C-a>', 'n', false, true).desc",
         "Send current context to Codex"
     )
+    Helpers.expect.global(child, "vim.fn.maparg('<C-a>', 'x') ~= ''", true)
+end
+
+T["plugin loading"]["defines the :Nvimcodex command"] = function()
+    Helpers.expect.global(child, "vim.fn.exists(':Nvimcodex')", 2)
 end
 
 T["setup()"]["sets exposed methods and default options value"] = function()
     child.lua([[require('nvimcodex').setup()]])
 
-    -- global object that holds your plugin information
-    Helpers.expect.global_type(child, "_G.Nvimcodex", "table")
-
     -- public methods
-    Helpers.expect.global_type(child, "_G.Nvimcodex.toggle", "function")
-    Helpers.expect.global_type(child, "_G.Nvimcodex.disable", "function")
-    Helpers.expect.global_type(child, "_G.Nvimcodex.enable", "function")
+    Helpers.expect.global_type(child, "require('nvimcodex').setup", "function")
+    Helpers.expect.global_type(child, "require('nvimcodex').send", "function")
+    Helpers.expect.global_type(child, "require('nvimcodex').send_to_codex", "function")
+    Helpers.expect.global_type(child, "require('nvimcodex').reload_skills", "function")
 
     -- config
-    Helpers.expect.global_type(child, "_G.Nvimcodex.config", "table")
-
-    -- assert the value, and the type
-    Helpers.expect.config(child, "debug", false)
-    Helpers.expect.config_type(child, "debug", "boolean")
+    Helpers.expect.global(child, "require('nvimcodex.config').options.debug", false)
+    Helpers.expect.global_type(child, "require('nvimcodex.config').options.debug", "boolean")
 end
 
 T["setup()"]["overrides default values"] = function()
@@ -55,8 +55,27 @@ T["setup()"]["overrides default values"] = function()
     })]])
 
     -- assert the value, and the type
-    Helpers.expect.config(child, "debug", true)
-    Helpers.expect.config_type(child, "debug", "boolean")
+    Helpers.expect.global(child, "require('nvimcodex.config').options.debug", true)
+    Helpers.expect.global_type(child, "require('nvimcodex.config').options.debug", "boolean")
+end
+
+T["setup()"]["keymap = false removes the default mapping"] = function()
+    child.lua([[require('nvimcodex').setup({ keymap = false })]])
+
+    Helpers.expect.global(child, "vim.fn.maparg('<C-a>', 'n')", "")
+    Helpers.expect.global(child, "vim.fn.maparg('<C-a>', 'x')", "")
+end
+
+T["setup()"]["keymap = '<leader>k' moves the mapping"] = function()
+    child.lua([[require('nvimcodex').setup({ keymap = '<leader>k' })]])
+
+    Helpers.expect.global(child, "vim.fn.maparg('<C-a>', 'n')", "")
+    Helpers.expect.global(
+        child,
+        "vim.fn.maparg('<leader>k', 'n', false, true).desc",
+        "Send current context to Codex"
+    )
+    Helpers.expect.global(child, "vim.fn.maparg('<leader>k', 'x') ~= ''", true)
 end
 
 return T

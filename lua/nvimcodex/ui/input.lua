@@ -19,7 +19,7 @@ local function register_blink()
     if config.sources.providers.nvimcodex == nil then
         blink.add_source_provider("nvimcodex", {
             name = "NvimCodex",
-            module = "nvimcodex.cmp.blink",
+            module = "nvimcodex.integrations.blink",
         })
     end
     -- per_filetype_provider_ids only *extends* the default sources; a
@@ -38,6 +38,7 @@ function input.open(opts, on_confirm)
         return
     end
 
+    require("nvimcodex.skills").ensure_loaded()
     register_blink()
 
     opts.win = vim.tbl_deep_extend("force", opts.win or {}, {

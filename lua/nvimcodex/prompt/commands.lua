@@ -1,5 +1,4 @@
 local commands = {}
-local fs = require("nvimcodex.lib.fs")
 
 commands.list = {
     buffer = {
@@ -50,32 +49,6 @@ function commands.apply(ctx, text)
     ctx.value = vim.trim(ctx.value)
 
     return ctx
-end
-
-function commands.format(ctx)
-    local lines = {}
-
-    if ctx.location ~= "" then
-        if string.match(ctx.location, "neo%-tree filesystem") then
-            ctx.location = "\n" .. table.concat(fs.get_neotree_context(), "\n")
-        end
-
-        table.insert(lines, string.format("Context: %s", ctx.location))
-    end
-
-    if ctx.prefix then
-        table.insert(lines, ctx.prefix)
-    end
-
-    if ctx.value ~= "" then
-        table.insert(lines, ctx.value)
-    end
-
-    if ctx.subfix then
-        table.insert(lines, ctx.subfix)
-    end
-
-    return table.concat(lines, "\n")
 end
 
 return commands

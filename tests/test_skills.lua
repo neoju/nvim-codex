@@ -5,8 +5,8 @@ local child = Helpers.new_child_neovim()
 local T = MiniTest.new_set({
     hooks = {
         pre_case = function()
-            -- --noplugin: keep plugin/nvimcodex.lua's deferred skills.load()
-            -- from racing the fixtures and scanning real user dirs
+            -- --noplugin: keep plugin/nvimcodex.lua (keymap, DirChanged
+            -- autocmd) from interfering with the fixtures
             child.restart({ "-u", "scripts/minimal_init.lua", "--noplugin" })
         end,
         post_once = child.stop,
@@ -58,7 +58,7 @@ T["skills.load()"]["scans roots, follows symlinks, descends into .system"] = fun
         uv.chdir(_G.cwd)
 
         _G.loaded = nil
-        require("nvimcodex.lib.skills").load(function(list)
+        require("nvimcodex.skills").load(function(list)
             _G.loaded = list
         end)
     ]])
@@ -109,7 +109,7 @@ T["skills.load()"]["project root wins on duplicate skill names"] = function()
         uv.chdir(_G.cwd)
 
         _G.loaded = nil
-        require("nvimcodex.lib.skills").load(function(list)
+        require("nvimcodex.skills").load(function(list)
             _G.loaded = list
         end)
     ]])
@@ -171,7 +171,7 @@ T["skills.load()"]["loads plugin cache skills with lowest precedence"] = functio
         uv.chdir(_G.cwd)
 
         _G.loaded = nil
-        require("nvimcodex.lib.skills").load(function(list)
+        require("nvimcodex.skills").load(function(list)
             _G.loaded = list
         end)
     ]])
@@ -195,7 +195,7 @@ T["skills.load()"]["completes with an empty list when roots are missing"] = func
         vim.env.HOME = vim.fn.tempname() -- does not exist
         vim.uv.chdir(vim.fn.tempname())
         _G.loaded = nil
-        require("nvimcodex.lib.skills").load(function(list)
+        require("nvimcodex.skills").load(function(list)
             _G.loaded = list
         end)
     ]])
@@ -204,6 +204,124 @@ T["skills.load()"]["completes with an empty list when roots are missing"] = func
     local loaded = child.lua_get("_G.loaded")
 
     Helpers.expect.equality(loaded, {})
+end
+
+T["skills.ensure_loaded()"] = MiniTest.new_set()
+
+T["skills.ensure_loaded()"]["scans lazily on first call"] = function()
+    child.lua([[
+        vim.env.CODEX_HOME = vim.fn.tempname() -- does not exist
+        vim.env.HOME = vim.fn.tempname() -- does not exist
+        local cwd = vim.fn.tempname()
+        vim.fn.mkdir(cwd, "p")
+        vim.uv.chdir(cwd)
+
+        _G.loaded = nil
+        require("nvimcodex.skills").ensure_loaded(function(list)
+            _G.loaded = list
+        end)
+    ]])
+
+    child.lua([[vim.wait(2000, function() return _G.loaded ~= nil end, 10)]])
+    Helpers.expect.equality(child.lua_get("_G.loaded"), {})
+end
+
+T["skills.ensure_loaded()"]["calls back synchronously without rescanning once loaded"] = function()
+    child.lua([[
+        local skills = require("nvimcodex.skills")
+        vim.env.CODEX_HOME = vim.fn.tempname() -- does not exist
+        vim.env.HOME = vim.fn.tempname() -- does not exist
+        local cwd = vim.fn.tempname()
+        vim.fn.mkdir(cwd, "p")
+        vim.uv.chdir(cwd)
+
+        _G.loaded = nil
+        skills.load(function(list)
+            _G.loaded = list
+        end)
+    ]])
+
+    child.lua([[vim.wait(2000, function() return _G.loaded ~= nil end, 10)]])
+
+    -- already loaded: callback must fire synchronously, and a planted skill
+    -- dir must NOT appear (proving no rescan happened)
+    child.lua([[
+        local skills = require("nvimcodex.skills")
+        local dir = vim.fs.joinpath(vim.uv.cwd(), ".codex", "skills", "late")
+        vim.fn.mkdir(dir, "p")
+        local fd = assert(vim.uv.fs_open(vim.fs.joinpath(dir, "SKILL.md"), "w", 420))
+        assert(vim.uv.fs_write(fd, "---\nname: late\n---\n", 0))
+        vim.uv.fs_close(fd)
+
+        _G.sync_loaded = nil
+        skills.ensure_loaded(function(list)
+            _G.sync_loaded = list
+        end)
+    ]])
+
+    Helpers.expect.equality(child.lua_get("_G.sync_loaded"), {})
+end
+
+T["skills.invalidate()"] = MiniTest.new_set()
+
+T["skills.invalidate()"]["clears the cache so the next ensure_loaded rescans"] = function()
+    child.lua([[
+        local uv = vim.uv
+        local skills = require("nvimcodex.skills")
+
+        _G.cwd = vim.fn.tempname()
+        _G.home = vim.fn.tempname()
+        _G.fixture = vim.fn.tempname()
+        vim.fn.mkdir(vim.fs.joinpath(_G.cwd, ".codex", "skills", "one"), "p")
+        vim.fn.mkdir(_G.home, "p")
+        vim.fn.mkdir(_G.fixture, "p")
+        local fd = assert(uv.fs_open(
+            vim.fs.joinpath(_G.cwd, ".codex", "skills", "one", "SKILL.md"), "w", 420
+        ))
+        assert(uv.fs_write(fd, "---\nname: one\n---\n", 0))
+        uv.fs_close(fd)
+
+        vim.env.CODEX_HOME = _G.fixture
+        vim.env.HOME = _G.home
+        uv.chdir(_G.cwd)
+
+        _G.loaded = nil
+        skills.load(function(list)
+            _G.loaded = list
+        end)
+    ]])
+
+    child.lua([[vim.wait(2000, function() return _G.loaded ~= nil end, 10)]])
+    Helpers.expect.equality(#child.lua_get("_G.loaded"), 1)
+
+    child.lua([[
+        local skills = require("nvimcodex.skills")
+        skills.invalidate()
+        _G.cache_after_invalidate = skills.get()
+
+        vim.fn.mkdir(vim.fs.joinpath(vim.uv.cwd(), ".codex", "skills", "two"), "p")
+        local fd = assert(vim.uv.fs_open(
+            vim.fs.joinpath(vim.uv.cwd(), ".codex", "skills", "two", "SKILL.md"), "w", 420
+        ))
+        assert(vim.uv.fs_write(fd, "---\nname: two\n---\n", 0))
+        vim.uv.fs_close(fd)
+
+        _G.reloaded = nil
+        skills.ensure_loaded(function(list)
+            _G.reloaded = list
+        end)
+    ]])
+
+    -- invalidate does not scan by itself
+    Helpers.expect.equality(child.lua_get("_G.cache_after_invalidate"), {})
+
+    child.lua([[vim.wait(2000, function() return _G.reloaded ~= nil end, 10)]])
+    Helpers.expect.equality(
+        vim.tbl_map(function(s)
+            return s.name
+        end, child.lua_get("_G.reloaded")),
+        { "one", "two" }
+    )
 end
 
 return T

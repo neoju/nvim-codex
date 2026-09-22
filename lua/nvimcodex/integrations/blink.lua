@@ -1,5 +1,5 @@
-local skills = require("nvimcodex.lib.skills")
-local commands = require("nvimcodex.lib.commands")
+local skills = require("nvimcodex.skills")
+local commands = require("nvimcodex.prompt.commands")
 
 local source = {}
 

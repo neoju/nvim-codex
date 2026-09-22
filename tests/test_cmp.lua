@@ -7,7 +7,7 @@ local T = MiniTest.new_set({
         pre_case = function()
             child.restart({ "-u", "scripts/minimal_init.lua" })
             child.lua([[
-                _G.source = require("nvimcodex.cmp.blink").new()
+                _G.source = require("nvimcodex.integrations.blink").new()
                 _G.get = function(line, start_col)
                     local result
                     _G.source:get_completions(
@@ -28,7 +28,7 @@ T["blink source"] = MiniTest.new_set()
 
 T["blink source"]["$ trigger yields skill items"] = function()
     child.lua([[
-        local skills = require("nvimcodex.lib.skills")
+        local skills = require("nvimcodex.skills")
         skills.get = function()
             return {
                 { name = "alpha", description = "Alpha skill", path = "/x/SKILL.md", root = "/x" },
@@ -57,7 +57,7 @@ T["blink source"]["@ trigger yields command items"] = function()
     Helpers.expect.equality(result.items[1].documentation, nil)
     Helpers.expect.equality(
         result.items[1].labelDetails.description,
-        require("nvimcodex.lib.commands").list.ask.description
+        require("nvimcodex.prompt.commands").list.ask.description
     )
 end
 
