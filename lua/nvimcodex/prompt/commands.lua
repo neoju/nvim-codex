@@ -33,6 +33,14 @@ commands.list = {
             ctx.value = ""
         end,
     },
+    scoped = {
+        description = "Restrict edits to the provided context",
+        requires_context = true,
+        apply = function(ctx)
+            ctx.prefix = "Constraint: Only edit the code within the provided context. "
+                .. "Do not modify any code or files outside that context."
+        end,
+    },
 }
 
 --- Rewrites `ctx` for each known `@name` token in `text`, strips those tokens,
@@ -41,10 +49,23 @@ function commands.apply(ctx, text)
     ctx.value = text
     local requires_value = false
 
-    for name in ctx.value:gmatch("@(%w+)") do
+    for name in ctx.value:gmatch("@([%w-]+)") do
         local command = commands.list[name]
 
         if command then
+            if
+                command.requires_context
+                and ctx.location == ""
+                and (not ctx.files or #ctx.files == 0)
+            then
+                log.notify(
+                    "commands",
+                    vim.log.levels.ERROR,
+                    true,
+                    "@" .. name .. " requires selected context"
+                )
+                return nil
+            end
             requires_value = requires_value or command.requires_value
             command.apply(ctx)
             ctx.value = ctx.value:gsub("@" .. name .. "%f[%W]", "", 1)

@@ -45,7 +45,7 @@ local function skill_items()
             label = text,
             insertText = text,
             filterText = text,
-            kind = kind.Function,
+            kind = kind.Text,
             labelDetails = label_details(skill.description),
         })
     end

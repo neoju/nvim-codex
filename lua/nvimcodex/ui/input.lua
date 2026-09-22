@@ -2,6 +2,26 @@ local input = {}
 
 local blink_registered = false
 
+local function set_default_highlights()
+    if vim.fn.hlexists("NvimCodexInputCommand") == 0 then
+        vim.api.nvim_set_hl(0, "NvimCodexInputCommand", { fg = "#ff8080", ctermfg = 9 })
+    end
+    if vim.fn.hlexists("NvimCodexInputSkill") == 0 then
+        vim.api.nvim_set_hl(0, "NvimCodexInputSkill", { fg = "#80bfff", ctermfg = 12 })
+    end
+end
+
+local function highlights(text)
+    local result = {}
+    for start_col, token in text:gmatch("()(@[%w-]+)") do
+        table.insert(result, { start_col - 1, start_col - 1 + #token, "NvimCodexInputCommand" })
+    end
+    for start_col, token in text:gmatch("()(%$[%w_:-]+)") do
+        table.insert(result, { start_col - 1, start_col - 1 + #token, "NvimCodexInputSkill" })
+    end
+    return result
+end
+
 --- Registers the `nvimcodex` blink.cmp source and enables it (exclusively) for
 --- the `nvimcodex_ask` filetype. Idempotent and a no-op when blink is absent.
 local function register_blink()
@@ -40,6 +60,16 @@ function input.open(opts, on_confirm)
 
     require("nvimcodex.skills").ensure_loaded()
     register_blink()
+    set_default_highlights()
+
+    local existing_highlight = opts.highlight
+    opts.highlight = function(text)
+        local result = highlights(text)
+        if type(existing_highlight) == "function" then
+            vim.list_extend(result, existing_highlight(text))
+        end
+        return result
+    end
 
     opts.win = vim.tbl_deep_extend("force", opts.win or {}, {
         bo = { filetype = "nvimcodex_ask" },
