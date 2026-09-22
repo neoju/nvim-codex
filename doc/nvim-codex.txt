@@ -11,11 +11,6 @@ Parameters ~
 Opens the prompt and sends the result to the Codex pane.
 
 ------------------------------------------------------------------------------
-                                                     *Nvimcodex.send_to_codex()*
-                          `Nvimcodex.send_to_codex`()
-Alias of `send`, kept for backward compatibility.
-
-------------------------------------------------------------------------------
                                                      *Nvimcodex.reload_skills()*
                      `Nvimcodex.reload_skills`({callback})
 Rescans the skill directories and refreshes the completion cache.
