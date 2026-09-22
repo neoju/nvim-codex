@@ -21,7 +21,8 @@ end
 ---@param ... any: the arguments of the formatted string.
 ---@private
 function log.notify(scope, level, verbose, str, ...)
-    if not verbose and _G.Nvimcodex.config ~= nil and not _G.Nvimcodex.config.debug then
+    local nvimcodex = _G.Nvimcodex or {}
+    if not verbose and nvimcodex.config ~= nil and not nvimcodex.config.debug then
         return
     end
 

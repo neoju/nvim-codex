@@ -12,7 +12,7 @@ Nvimcodex.options = {
     debug = false,
 
     -- Auto trigger Enter key after send user's input to Codex pane
-    auto_send = true,
+    auto_send = false,
 
     -- Auto focus to Codex pane after input
     auto_focus_codex = false,

@@ -4,6 +4,8 @@ local log = require("nvimcodex.util.log")
 
 local tmux = require("nvimcodex.lib.tmux")
 local input = require("nvimcodex.lib.input")
+local commands = require("nvimcodex.lib.commands")
+local skills = require("nvimcodex.lib.skills")
 
 local Nvimcodex = {}
 
@@ -39,21 +41,24 @@ function Nvimcodex.send_to_codex()
     local filepath = vim.fn.expand("%:.")
     local start_line
     local end_line
+    local location
 
     if vim.fn.mode():match("^[vV\022]") then
         start_line = vim.fn.line("'<")
         end_line = vim.fn.line("'>")
 
-        if start_line > end_line then
-            start_line, end_line = end_line, start_line
+        if start_line ~= end_line then
+            if start_line < end_line then
+                start_line, end_line = end_line, start_line
+            end
+
+            location = string.format("%s:L%d-L%d", filepath, start_line, end_line)
+        else
+            location = string.format("%s:L%d", filepath, start_line)
         end
     else
-        start_line = vim.fn.line(".")
-        end_line = start_line
+        location = ""
     end
-
-    local location = start_line == end_line and string.format("%s:L%d", filepath, start_line)
-        or string.format("%s:L%d-L%d", filepath, start_line, end_line)
 
     input.open({
         prompt = "Ask Codex: ",
@@ -67,13 +72,19 @@ function Nvimcodex.send_to_codex()
             return -- User cancelled
         end
 
-        local text = string.format("%s - %s", location, value)
+        local ctx = commands.apply({ filepath = filepath, location = location }, value)
+        local prompt = commands.format(ctx)
 
-        local sent, error_message = tmux.send_to_codex(text, vim.fn.getcwd())
+        local sent, error_message = tmux.send_to_codex(prompt, vim.fn.getcwd())
         if not sent then
             log.notify("send_to_codex", vim.log.levels.WARN, true, "%s", error_message)
         end
     end)
+end
+
+--- Rescans the skill directories and refreshes the completion cache.
+function Nvimcodex.reload_skills(callback)
+    skills.reload(callback)
 end
 
 _G.Nvimcodex = Nvimcodex

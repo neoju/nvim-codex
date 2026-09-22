@@ -34,6 +34,39 @@ local function send_enter(pane_id)
     end
 end
 
+local function paste_text(pane_id, text)
+    local buffer_name = string.format("nvimcodex-%d", vim.uv.hrtime())
+    local set_result = vim.system({
+        "tmux",
+        "set-buffer",
+        "-b",
+        buffer_name,
+        "--",
+        text,
+    }):wait()
+
+    if set_result.code ~= 0 then
+        return false, set_result.stderr
+    end
+
+    local paste_result = vim.system({
+        "tmux",
+        "paste-buffer",
+        "-d",
+        "-b",
+        buffer_name,
+        "-t",
+        pane_id,
+    }):wait()
+
+    if paste_result.code ~= 0 then
+        vim.system({ "tmux", "delete-buffer", "-b", buffer_name }):wait()
+        return false, paste_result.stderr
+    end
+
+    return true
+end
+
 function tmux.is_available()
     return vim.fn.executable("tmux") == 1
 end
@@ -72,17 +105,9 @@ function tmux.send_to_codex(text, path)
         return false, error_message
     end
 
-    local send_result = vim.system({
-        "tmux",
-        "send-keys",
-        "-t",
-        pane_id,
-        "-l",
-        text,
-    }):wait()
-
-    if send_result.code ~= 0 then
-        return false, send_result.stderr
+    local pasted, error_message = paste_text(pane_id, text)
+    if not pasted then
+        return false, error_message
     end
 
     if config.options.auto_focus_codex then
