@@ -8,17 +8,6 @@ local function error_message(str, pattern)
     return string.format("Pattern: %s\nObserved string: %s", vim.inspect(pattern), str)
 end
 
-Helpers.expect.buf_width = MiniTest.new_expectation(
-    "variable in child process matches",
-    function(child, field, value)
-        return Helpers.expect.equality(
-            child.lua_get("vim.api.nvim_win_get_width(_G.Nvimcodex.state." .. field .. ")"),
-            value
-        )
-    end,
-    error_message
-)
-
 Helpers.expect.global = MiniTest.new_expectation(
     "variable in child process matches",
     function(child, field, value)
@@ -31,38 +20,6 @@ Helpers.expect.global_type = MiniTest.new_expectation(
     "variable type in child process matches",
     function(child, field, value)
         return Helpers.expect.global(child, "type(" .. field .. ")", value)
-    end,
-    error_message
-)
-
-Helpers.expect.config = MiniTest.new_expectation(
-    "config option matches",
-    function(child, field, value)
-        if field == "" then
-            return Helpers.expect.global(child, "_G.Nvimcodex.config" .. field, value)
-        else
-            return Helpers.expect.global(child, "_G.Nvimcodex.config." .. field, value)
-        end
-    end,
-    error_message
-)
-
-Helpers.expect.config_type = MiniTest.new_expectation(
-    "config option type matches",
-    function(child, field, value)
-        return Helpers.expect.global(child, "type(_G.Nvimcodex.config." .. field .. ")", value)
-    end,
-    error_message
-)
-
-Helpers.expect.state = MiniTest.new_expectation("state matches", function(child, field, value)
-    return Helpers.expect.global(child, "_G.Nvimcodex.state." .. field, value)
-end, error_message)
-
-Helpers.expect.state_type = MiniTest.new_expectation(
-    "state type matches",
-    function(child, field, value)
-        return Helpers.expect.global(child, "type(_G.Nvimcodex.state." .. field .. ")", value)
     end,
     error_message
 )
@@ -91,17 +48,6 @@ Helpers.new_child_neovim = function()
 
     child.wait = function(ms)
         child.loop.sleep(ms or 10)
-    end
-
-    child.nnp = function()
-        child.cmd("Nvimcodex")
-        child.wait()
-    end
-
-    child.get_wins_in_tab = function(tab)
-        tab = tab or "_G.Nvimcodex.state.active_tab"
-
-        return child.lua_get("vim.api.nvim_tabpage_list_wins(" .. tab .. ")")
     end
 
     child.list_buffers = function()

@@ -11,9 +11,9 @@ local T = MiniTest.new_set({
     },
 })
 
-T["tmux.send_to_codex()"] = MiniTest.new_set()
+T["tmux.send()"] = MiniTest.new_set()
 
-T["tmux.send_to_codex()"]["pastes multiline prompts through a tmux buffer"] = function()
+T["tmux.send()"]["pastes multiline prompts through a tmux buffer"] = function()
     child.lua([[
         local calls = {}
         local cwd = vim.fn.getcwd()
@@ -30,7 +30,7 @@ T["tmux.send_to_codex()"]["pastes multiline prompts through a tmux buffer"] = fu
             }
         end
 
-        local sent = require("nvimcodex.lib.tmux").send_to_codex("first\nsecond", cwd)
+        local sent = require("nvimcodex.transport.tmux").send("first\nsecond", cwd)
         vim.system = original_system
         _G.calls = calls
         _G.sent = sent

@@ -1,5 +1,5 @@
 local config = require("nvimcodex.config")
-local log = require("nvimcodex.util.log")
+local log = require("nvimcodex.log")
 
 local tmux = {}
 
@@ -95,7 +95,7 @@ function tmux.find_codex_pane(path)
     return nil, "No tmux pane running codex was found in the current path"
 end
 
-function tmux.send_to_codex(text, path)
+function tmux.send(text, path)
     if not tmux.is_available() then
         return false, "tmux is not executable"
     end
