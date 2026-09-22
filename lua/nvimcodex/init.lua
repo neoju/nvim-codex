@@ -1,6 +1,7 @@
 local main = require("nvimcodex.main")
 local config = require("nvimcodex.config")
 local log = require("nvimcodex.util.log")
+local visual_selection = require("nvimcodex.util.visual_selection")
 
 local tmux = require("nvimcodex.lib.tmux")
 local input = require("nvimcodex.lib.input")
@@ -44,14 +45,9 @@ function Nvimcodex.send_to_codex()
     local location
 
     if vim.fn.mode():match("^[vV\022]") then
-        start_line = vim.fn.line("'<")
-        end_line = vim.fn.line("'>")
+        start_line, end_line = visual_selection.get_line_range()
 
         if start_line ~= end_line then
-            if start_line < end_line then
-                start_line, end_line = end_line, start_line
-            end
-
             location = string.format("%s:L%d-L%d", filepath, start_line, end_line)
         else
             location = string.format("%s:L%d", filepath, start_line)

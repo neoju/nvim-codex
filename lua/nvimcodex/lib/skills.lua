@@ -1,5 +1,3 @@
-local log = require("nvimcodex.util.log")
-
 local skills = {}
 
 local cache = {}
@@ -89,7 +87,6 @@ function skills.load(callback)
         loading = false
         local callbacks = pending_callbacks
         pending_callbacks = {}
-        log.debug("skills", "loaded %d skills", #cache)
         for _, cb in ipairs(callbacks) do
             cb(cache)
         end

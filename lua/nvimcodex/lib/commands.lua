@@ -1,4 +1,5 @@
 local commands = {}
+local fs = require("nvimcodex.lib.fs")
 
 commands.list = {
     buffer = {
@@ -55,8 +56,8 @@ function commands.format(ctx)
     local lines = {}
 
     if ctx.location ~= "" then
-        if string.find(ctx.location, "neo-tree") then
-            -- need to support files selecte form neo-tree
+        if string.match(ctx.location, "neo%-tree filesystem") then
+            ctx.location = "\n" .. table.concat(fs.get_neotree_context(), "\n")
         end
 
         table.insert(lines, string.format("Context: %s", ctx.location))
