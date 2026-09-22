@@ -12,6 +12,11 @@ Initializes the plugin, sets event listeners and internal state.
                              `Nvimcodex.disable`()
 Disables the plugin, clear highlight groups and autocmds, closes side buffers and resets the internal state.
 
+------------------------------------------------------------------------------
+                                                     *Nvimcodex.reload_skills()*
+                     `Nvimcodex.reload_skills`({callback})
+Rescans the skill directories and refreshes the completion cache.
+
 
 ==============================================================================
 ------------------------------------------------------------------------------
@@ -45,6 +50,52 @@ Parameters ~
 
 Usage ~
 `require("nvimcodex").setup()` (add `{}` with your |Nvimcodex.options| table)
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                               *label_details()*
+                         `label_details`({description})
+Descriptions are rendered inline (blink's `label_description` column, which
+truncates on its own) instead of a documentation popup, so the menu stays
+stable while typing.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                              *commands.apply()*
+                        `commands.apply`({ctx}, {text})
+Rewrites `ctx` for each known `@name` token in `text`, strips those tokens,
+and returns `ctx, cleaned_text`. Unknown `@foo` tokens are left untouched.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                              *register_blink()*
+                               `register_blink`()
+Registers the `nvimcodex` blink.cmp source and enables it (exclusively) for
+the `nvimcodex_ask` filetype. Idempotent and a no-op when blink is absent.
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                 *skills.dirs()*
+                                `skills.dirs`()
+Ordered skill roots, project-local first so project skills shadow user ones
+on name collisions (first occurrence of a name wins).
+
+------------------------------------------------------------------------------
+                                                           *parse_frontmatter()*
+                         `parse_frontmatter`({content})
+Parses `name:` and `description:` from the YAML frontmatter delimited by
+the first `---` line and the next `---` line.
+
+------------------------------------------------------------------------------
+                                                                 *skills.load()*
+                           `skills.load`({callback})
+Scans all roots on the next event-loop turn and fills the cache. Results are
+collected per root and merged in `dirs()` order, so root precedence is
+deterministic.
 
 
  vim:tw=78:ts=8:noet:ft=help:norl:

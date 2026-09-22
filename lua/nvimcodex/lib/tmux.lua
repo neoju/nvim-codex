@@ -105,9 +105,9 @@ function tmux.send_to_codex(text, path)
         return false, error_message
     end
 
-    local pasted, error_message = paste_text(pane_id, text)
+    local pasted, paste_error = paste_text(pane_id, text)
     if not pasted then
-        return false, error_message
+        return false, paste_error
     end
 
     if config.options.auto_focus_codex then
