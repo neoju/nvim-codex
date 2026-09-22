@@ -66,6 +66,24 @@ If no matching Codex pane is found, the plugin shows a warning. Check that
 Codex is running, that both panes share a tmux window, and that their working
 directories match.
 
+### Examples
+
+Send the current line from Normal mode:
+
+![Send the current line from Normal mode](doc/normal-prompt.gif)
+
+Send code with the current file context:
+
+![Send code with the current file context](doc/with-file.gif)
+
+Use the current buffer and include a skill in the prompt:
+
+![Use the current buffer and include a skill in the prompt](doc/buffer%2Bskill.gif)
+
+Use the ask and explain completion entries:
+
+![Use the ask and explain completion entries](doc/ask%2Bexplain.gif)
+
 ## Configuration
 
 With LazyVim, add `lua/plugins/nvim-codex.lua`:
