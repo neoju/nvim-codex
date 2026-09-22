@@ -1,5 +1,12 @@
 Nvimcodex.disable()	nvim-codex.txt	/*Nvimcodex.disable()*
 Nvimcodex.enable()	nvim-codex.txt	/*Nvimcodex.enable()*
 Nvimcodex.options	nvim-codex.txt	/*Nvimcodex.options*
+Nvimcodex.reload_skills()	nvim-codex.txt	/*Nvimcodex.reload_skills()*
 Nvimcodex.setup()	nvim-codex.txt	/*Nvimcodex.setup()*
 Nvimcodex.toggle()	nvim-codex.txt	/*Nvimcodex.toggle()*
+commands.apply()	nvim-codex.txt	/*commands.apply()*
+label_details()	nvim-codex.txt	/*label_details()*
+parse_frontmatter()	nvim-codex.txt	/*parse_frontmatter()*
+register_blink()	nvim-codex.txt	/*register_blink()*
+skills.dirs()	nvim-codex.txt	/*skills.dirs()*
+skills.load()	nvim-codex.txt	/*skills.load()*

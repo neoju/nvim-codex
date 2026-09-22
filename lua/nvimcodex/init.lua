@@ -1,6 +1,12 @@
 local main = require("nvimcodex.main")
 local config = require("nvimcodex.config")
-local utils = require("nvimcodex.util")
+local log = require("nvimcodex.util.log")
+local visual_selection = require("nvimcodex.util.visual_selection")
+
+local tmux = require("nvimcodex.lib.tmux")
+local input = require("nvimcodex.lib.input")
+local commands = require("nvimcodex.lib.commands")
+local skills = require("nvimcodex.lib.skills")
 
 local Nvimcodex = {}
 
@@ -36,23 +42,21 @@ function Nvimcodex.send_to_codex()
     local filepath = vim.fn.expand("%:.")
     local start_line
     local end_line
+    local location
 
     if vim.fn.mode():match("^[vV\022]") then
-        start_line = vim.fn.line("'<")
-        end_line = vim.fn.line("'>")
+        start_line, end_line = visual_selection.get_line_range()
 
-        if start_line > end_line then
-            start_line, end_line = end_line, start_line
+        if start_line ~= end_line then
+            location = string.format("%s:L%d-L%d", filepath, start_line, end_line)
+        else
+            location = string.format("%s:L%d", filepath, start_line)
         end
     else
-        start_line = vim.fn.line(".")
-        end_line = start_line
+        location = ""
     end
 
-    local location = start_line == end_line and string.format("%s:L%d", filepath, start_line)
-        or string.format("%s:L%d-L%d", filepath, start_line, end_line)
-
-    utils.input.open({
+    input.open({
         prompt = "Ask Codex: ",
         win = {
             relative = "cursor",
@@ -64,19 +68,21 @@ function Nvimcodex.send_to_codex()
             return -- User cancelled
         end
 
-        local text = string.format("%s - %s", location, value)
+        local ctx = commands.apply({ filepath = filepath, location = location }, value)
+        local prompt = commands.format(ctx)
 
-        local sent, error_message = utils.tmux.send_to_codex(text, vim.fn.getcwd())
+        local sent, error_message = tmux.send_to_codex(prompt, vim.fn.getcwd())
         if not sent then
-            vim.notify(error_message, vim.log.levels.WARN)
+            log.notify("send_to_codex", vim.log.levels.WARN, true, "%s", error_message)
         end
     end)
 end
 
-_G.Nvimcodex = Nvimcodex
+--- Rescans the skill directories and refreshes the completion cache.
+function Nvimcodex.reload_skills(callback)
+    skills.reload(callback)
+end
 
-vim.keymap.set({ "n", "x" }, "<C-a>", Nvimcodex.send_to_codex, {
-    desc = "Send current context to Codex",
-})
+_G.Nvimcodex = Nvimcodex
 
 return _G.Nvimcodex

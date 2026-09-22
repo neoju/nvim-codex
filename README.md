@@ -10,9 +10,11 @@ discuss.
 
 ## Requirements
 
-- Neovim 0.10 or later
+- Neovim 0.10.1 or later
+- [snacks.nvim](https://github.com/folke/snacks.nvim)
 - [tmux](https://github.com/tmux/tmux)
 - [Codex CLI](https://github.com/openai/codex), running in a tmux pane
+- [blink.cmp](https://github.com/Saghen/blink.cmp) (optional, for prompt completion)
 
 Neovim and Codex must be in the same tmux window. The Codex pane must be
 running in the same working directory as Neovim. The plugin finds panes by
@@ -25,6 +27,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 ```lua
 {
   "neoju/nvim-codex",
+  dependencies = { "folke/snacks.nvim" },
 }
 ```
 
@@ -33,6 +36,7 @@ With [packer.nvim](https://github.com/wbthomason/packer.nvim):
 ```lua
 use({
   "neoju/nvim-codex",
+  requires = { "folke/snacks.nvim" },
   config = function()
     require("nvimcodex").setup()
   end,
@@ -52,9 +56,8 @@ this function` into the Codex pane.
    `auto_focus_codex` if you also want to switch focus to the Codex pane.
 
 In Normal mode, the current line is sent. In Visual mode, the selected line
-range is sent. The plugin uses `Snacks.input()` when
-[snacks.nvim](https://github.com/folke/snacks.nvim) is available; otherwise it
-uses Neovim's built-in `vim.ui.input()`.
+range is sent. The plugin uses `Snacks.input()` for prompts; `snacks.nvim` is a
+required dependency.
 
 If no matching Codex pane is found, the plugin shows a warning. Check that
 Codex is running, that both panes share a tmux window, and that their working
@@ -87,6 +90,44 @@ Available options:
 - `auto_focus_codex`: Focus the Codex pane after sending the prompt. Defaults
   to `false`.
 
+## Completion
+
+If [blink.cmp](https://github.com/Saghen/blink.cmp) is installed, the ask
+prompt enables completion automatically (the buffer uses the `nvimcodex_ask`
+filetype with only this plugin's source active):
+
+- `$<name>` completes Codex skills scanned from `<cwd>/.codex/skills`,
+  `<cwd>/.agents/skills`, `$CODEX_HOME/skills` (or `~/.codex/skills`, including
+  `.system/` built-ins), `~/.agents/skills`, and
+  `$CODEX_HOME/plugins/cache/*/*/*/skills` (plugin skills, lowest precedence).
+  Directories are scanned in
+  that order and the first occurrence of a skill name wins, so project skills
+  shadow user ones. Entries may be symlinks. Skills are loaded asynchronously
+  at startup and re-scanned on `DirChanged`; force a rescan with
+  `:lua require("nvimcodex").reload_skills()`.
+- `@buffer` targets the whole current file (relative path, no line range).
+- `@ask` tells Codex to answer the request without editing files.
+- `@explain` tells Codex to explain the selected code and its surrounding context without editing files.
+
+If automatic registration does not work with your blink.cmp setup, configure
+the source manually:
+
+```lua
+require("blink.cmp").setup({
+  sources = {
+    per_filetype = {
+      nvimcodex_ask = { "nvimcodex" },
+    },
+    providers = {
+      nvimcodex = {
+        name = "NvimCodex",
+        module = "nvimcodex.cmp.blink",
+      },
+    },
+  },
+})
+```
+
 ## Commands and API
 
 `:Nvimcodex` toggles the plugin's internal enabled state. The public Lua API is
@@ -99,6 +140,7 @@ codex.send_to_codex()
 codex.enable()
 codex.disable()
 codex.toggle()
+codex.reload_skills()
 ```
 
 Run `:help Nvimcodex.options` for the generated option documentation.

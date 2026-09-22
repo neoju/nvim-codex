@@ -1,4 +1,5 @@
 local config = require("nvimcodex.config")
+local log = require("nvimcodex.util.log")
 
 local tmux = {}
 
@@ -15,7 +16,7 @@ local function focus_codex_pane(pane_id)
     }):wait()
 
     if response.code ~= 0 then
-        vim.notify(response.stderr, vim.log.levels.WARN)
+        log.notify("tmux", vim.log.levels.WARN, true, "%s", response.stderr)
     end
 end
 
@@ -29,8 +30,41 @@ local function send_enter(pane_id)
     }):wait()
 
     if response.code ~= 0 then
-        vim.notify(response.stderr, vim.log.levels.WARN)
+        log.notify("tmux", vim.log.levels.WARN, true, "%s", response.stderr)
     end
+end
+
+local function paste_text(pane_id, text)
+    local buffer_name = string.format("nvimcodex-%d", vim.uv.hrtime())
+    local set_result = vim.system({
+        "tmux",
+        "set-buffer",
+        "-b",
+        buffer_name,
+        "--",
+        text,
+    }):wait()
+
+    if set_result.code ~= 0 then
+        return false, set_result.stderr
+    end
+
+    local paste_result = vim.system({
+        "tmux",
+        "paste-buffer",
+        "-d",
+        "-b",
+        buffer_name,
+        "-t",
+        pane_id,
+    }):wait()
+
+    if paste_result.code ~= 0 then
+        vim.system({ "tmux", "delete-buffer", "-b", buffer_name }):wait()
+        return false, paste_result.stderr
+    end
+
+    return true
 end
 
 function tmux.is_available()
@@ -62,35 +96,27 @@ function tmux.find_codex_pane(path)
 end
 
 function tmux.send_to_codex(text, path)
+    if not tmux.is_available() then
+        return false, "tmux is not executable"
+    end
+
     local pane_id, error_message = tmux.find_codex_pane(path)
     if pane_id == nil then
         return false, error_message
     end
 
-    local send_result = vim.system({
-        "tmux",
-        "send-keys",
-        "-t",
-        pane_id,
-        "-l",
-        text,
-    }):wait()
-
-    if send_result.code ~= 0 then
-        return false, send_result.stderr
+    local pasted, paste_error = paste_text(pane_id, text)
+    if not pasted then
+        return false, paste_error
     end
 
     if config.options.auto_focus_codex then
         focus_codex_pane(pane_id)
     end
 
-    -- Keep this at bottom + defer timeout to ensure it not overlap with other tmux command
-    -- If no defer_fn sometime it will just send a `\n` char instead of Enter press
-    -- Idk if 50ms is safe across machine, who know? :D
     if config.options.auto_send then
-        vim.defer_fn(function()
-            send_enter(pane_id)
-        end, 50)
+        vim.wait(50)
+        send_enter(pane_id)
     end
 
     return true
