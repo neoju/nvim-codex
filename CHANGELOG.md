@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/neoju/nvim-codex/compare/v1.1.0...v1.1.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* reject empty [@ask](https://github.com/ask) prompts ([5b64aa9](https://github.com/neoju/nvim-codex/commit/5b64aa976687468da4cc10277e7201acd8b71c11))
+* reject empty [@ask](https://github.com/ask) prompts ([d773ec8](https://github.com/neoju/nvim-codex/commit/d773ec89a65c17bfd768754cc5116f25e5db3863))
+
 ## [1.1.0](https://github.com/neoju/nvim-codex/compare/v1.0.0...v1.1.0) (2026-09-21)
 
 
