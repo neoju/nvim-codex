@@ -37,24 +37,17 @@ end
 function M.send()
     local ctx = M.capture()
 
-    input.open({
-        prompt = "Ask Codex: ",
-        win = {
-            relative = "cursor",
-            row = 1,
-            col = 0,
-        },
-    }, function(value)
+    input.open(function(value)
         if value == nil then
             return -- User cancelled
         end
 
-        ctx = commands.apply(ctx, value)
-        if ctx == nil then
+        local tasks = commands.apply(ctx, value)
+        if tasks == nil then
             return
         end
 
-        local text = format.render(ctx)
+        local text = format.render(tasks)
 
         local sent, error_message = tmux.send(text, vim.fn.getcwd())
         if not sent then

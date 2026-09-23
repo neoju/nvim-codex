@@ -6,6 +6,9 @@ local function set_default_highlights()
     if vim.fn.hlexists("NvimCodexInputCommand") == 0 then
         vim.api.nvim_set_hl(0, "NvimCodexInputCommand", { fg = "#ff8080", ctermfg = 9 })
     end
+    if vim.fn.hlexists("NvimCodexInputModifier") == 0 then
+        vim.api.nvim_set_hl(0, "NvimCodexInputModifier", { fg = "#ffbf80", ctermfg = 11 })
+    end
     if vim.fn.hlexists("NvimCodexInputSkill") == 0 then
         vim.api.nvim_set_hl(0, "NvimCodexInputSkill", { fg = "#80bfff", ctermfg = 12 })
     end
@@ -13,8 +16,11 @@ end
 
 local function highlights(text)
     local result = {}
-    for start_col, token in text:gmatch("()(@[%w-]+)") do
+    for start_col, token in text:gmatch("()(@[%w_:-]+)") do
         table.insert(result, { start_col - 1, start_col - 1 + #token, "NvimCodexInputCommand" })
+    end
+    for start_col, token in text:gmatch("()(#[%w_:-]+)") do
+        table.insert(result, { start_col - 1, start_col - 1 + #token, "NvimCodexInputModifier" })
     end
     for start_col, token in text:gmatch("()(%$[%w_:-]+)") do
         table.insert(result, { start_col - 1, start_col - 1 + #token, "NvimCodexInputSkill" })
@@ -51,7 +57,7 @@ local function register_blink()
     end
 end
 
-function input.open(opts, on_confirm)
+function input.open(on_confirm)
     local ok, snacks = pcall(require, "snacks")
     if not ok then
         vim.notify("[nvimcodex.nvim] snacks.nvim is required for input", vim.log.levels.ERROR)
@@ -62,22 +68,21 @@ function input.open(opts, on_confirm)
     register_blink()
     set_default_highlights()
 
-    local existing_highlight = opts.highlight
-    opts.highlight = function(text)
-        local result = highlights(text)
-        if type(existing_highlight) == "function" then
-            vim.list_extend(result, existing_highlight(text))
-        end
-        return result
-    end
-
-    opts.win = vim.tbl_deep_extend("force", opts.win or {}, {
-        bo = { filetype = "nvimcodex_ask" },
-        b = { completion = true },
-        on_buf = function(win)
-            pcall(vim.api.nvim_buf_set_name, win.buf, "NvimCodexAsk")
-        end,
-    })
+    local opts = {
+        prompt = "Ask Codex: ",
+        icon_pos = "title",
+        expand = false,
+        highlight = highlights,
+        win = {
+            relative = "cursor",
+            height = 2,
+            bo = { filetype = "nvimcodex_ask" },
+            b = { completion = true },
+            on_buf = function(win)
+                pcall(vim.api.nvim_buf_set_name, win.buf, "NvimCodexAsk")
+            end,
+        },
+    }
 
     snacks.input(opts, on_confirm)
 end
