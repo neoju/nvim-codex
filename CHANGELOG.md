@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0](https://github.com/neoju/nvim-codex/compare/v1.1.1...v1.2.0) (2026-09-23)
+
+
+### Features
+
+* add task-based prompt definitions and modifiers ([11e26e6](https://github.com/neoju/nvim-codex/commit/11e26e65d83a5ffc5d814e3092c9f0f6e7cb48fd))
+* complete prompt modifiers with trailing space ([c08668a](https://github.com/neoju/nvim-codex/commit/c08668aeb3cd02b9d63719addfa146cc706ac40d))
+* enhance prompt commands and completion ([2a1dc08](https://github.com/neoju/nvim-codex/commit/2a1dc08cc024605d4d18ee841c555548ad7a66cc))
+* expand prompt commands and completion ([ada1534](https://github.com/neoju/nvim-codex/commit/ada15349d72e4d65ae70a3c7dd081bbf318f97ed))
+
+
+### Bug Fixes
+
+* submit tmux prompt after trailing command ([36434d8](https://github.com/neoju/nvim-codex/commit/36434d854a4f2eb14fc5855b98f2463a522abec4))
+
 ## [1.1.1](https://github.com/neoju/nvim-codex/compare/v1.1.0...v1.1.1) (2026-09-22)
 
 
