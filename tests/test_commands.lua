@@ -37,7 +37,13 @@ T["commands.apply()"] = MiniTest.new_set()
 
 T["commands.apply()"]["returns one task without a command"] = function()
     Helpers.expect.equality(child.lua_get([[_G.apply("plain request")]]), {
-        { value = "plain request", location = "lua/foo.lua:L3", skills = {} },
+        {
+            value = "plain request",
+            location = "lua/foo.lua:L3",
+            files = {},
+            skills = {},
+            attributes = {},
+        },
     })
 end
 
@@ -53,6 +59,86 @@ T["commands.apply()"]["@ask wraps the request as a read-only question"] = functi
     Helpers.expect.equality(result[1].attributes, ask_attributes)
     Helpers.expect.equality(result[1].location, "")
     Helpers.expect.equality(result[1].value, "what does this do")
+end
+
+T["commands.apply()"]["loads diagnosis, fix, and test presets"] = function()
+    local result = child.lua_get([[_G.apply("@diagnose @fix @test failing behavior")]])
+    Helpers.expect.equality(#result, 3)
+    Helpers.expect.equality(type(result[1].attributes.goal), "string")
+    Helpers.expect.equality(result[1].attributes.boundaries, "Do not modify files.")
+    Helpers.expect.equality(type(result[2].attributes.goal), "string")
+    Helpers.expect.equality(type(result[3].attributes.goal), "string")
+end
+
+T["commands.apply()"]["#brief replaces output while #readonly keeps other attributes"] = function()
+    local result = child.lua_get([[_G.apply("@fix #brief #readonly failing behavior")]])
+    Helpers.expect.equality(
+        result[1].attributes.goal,
+        child.lua_get([[require("nvimcodex.prompt.commands").list.fix.primary_goal]])
+    )
+    Helpers.expect.equality(
+        result[1].attributes.output,
+        child.lua_get([[require("nvimcodex.prompt.commands").modifiers.brief.primary_output]])
+    )
+    Helpers.expect.equality(result[1].attributes.boundaries, "Do not modify files.")
+end
+
+T["commands.apply()"]["@fix asks for diagnosis, a fix, and verification in the rendered goal"] = function()
+    local task = child.lua_get([[(function()
+        return _G.apply("@fix broken behavior")[1]
+    end)()]])
+    local goal = task.attributes.goal:lower()
+    for _, action in ipairs({ "diagnos", "fix", "verif" }) do
+        Helpers.expect.equality(goal:find(action, 1, true) ~= nil, true)
+    end
+
+    local rendered = child.lua_get([[(function()
+        local tasks = _G.apply("@fix broken behavior")
+        return require("nvimcodex.prompt.format").render(tasks)
+    end)()]])
+    Helpers.expect.equality(
+        rendered:find("<INSTRUCTIONS>\nGoal: " .. task.attributes.goal .. "\nOutput: ", 1, true)
+            ~= nil,
+        true
+    )
+    Helpers.expect.equality(
+        rendered:find("<USER_PROMPT>\nbroken behavior\n</USER_PROMPT>", 1, true) ~= nil,
+        true
+    )
+end
+
+T["commands.apply()"]["#scoped keeps @ask read-only with selected files"] = function()
+    local result = child.lua_get([[(function()
+        return require("nvimcodex.prompt.commands").apply({
+            filepath = "lua/foo.lua",
+            location = "lua/foo.lua:L3",
+            files = { "one.lua" },
+        }, "@ask #scoped what does this do")
+    end)()]])
+    Helpers.expect.equality(result[1].location, "")
+    Helpers.expect.equality(result[1].files, { "one.lua" })
+    Helpers.expect.equality(
+        result[1].attributes.boundaries,
+        "Do not modify files. " .. scoped_boundary
+    )
+end
+
+T["commands.apply()"]["#readonly does not duplicate an existing read-only boundary"] = function()
+    local result = child.lua_get([[_G.apply("@ask #readonly what does this do")]])
+    Helpers.expect.equality(result[1].attributes.boundaries, "Do not modify files.")
+end
+
+T["commands.apply()"]["interleaved repeated boundaries appear once"] = function()
+    local result = child.lua_get([[(function()
+        return require("nvimcodex.prompt.commands").apply({
+            files = { "one.lua" },
+            location = "one.lua:L3",
+        }, "@ask #scoped #readonly #scoped what does this do")
+    end)()]])
+    Helpers.expect.equality(
+        result[1].attributes.boundaries,
+        "Do not modify files. " .. scoped_boundary
+    )
 end
 
 T["commands.apply()"]["@ask without a question logs an error and cancels the prompt"] = function()
@@ -105,13 +191,16 @@ T["commands.apply()"]["applies multiple tokens"] = function()
         {
             value = "summarize",
             location = "lua/foo.lua",
+            files = {},
             skills = {},
+            attributes = {},
         },
         {
             attributes = ask_attributes,
             special_instruction = "Explain the reasoning when it helps answer the question.",
             value = "summarize",
             location = "",
+            files = {},
             skills = {},
         },
     })
@@ -124,6 +213,7 @@ T["commands.apply()"]["attaches scoped instructions only to its command"] = func
             attributes = { boundaries = scoped_boundary },
             value = "summarize",
             location = "lua/foo.lua",
+            files = {},
             skills = {},
         },
         {
@@ -131,12 +221,14 @@ T["commands.apply()"]["attaches scoped instructions only to its command"] = func
             special_instruction = "Explain the reasoning when it helps answer the question.",
             value = "summarize",
             location = "",
+            files = {},
             skills = {},
         },
         {
             attributes = explain_attributes,
             value = "",
             location = "lua/foo.lua:L3",
+            files = {},
             skills = { "$my-skill" },
         },
     })
@@ -161,11 +253,12 @@ T["commands.apply()"]["keeps file lists separate between tasks"] = function()
     Helpers.expect.equality(result, "one.lua")
 end
 
-T["commands.apply()"]["#scoped before @buffer attaches to the first task"] = function()
-    local result = child.lua_get([[_G.apply("#scoped @buffer change this")]])
+T["commands.apply()"]["leading modifier and skill attach to the first command"] = function()
+    local result = child.lua_get([[_G.apply("$review-agent #scoped @buffer change this")]])
     Helpers.expect.equality(result[1].location, "lua/foo.lua")
     Helpers.expect.equality(result[1].value, "change this")
     Helpers.expect.equality(result[1].attributes.boundaries, scoped_boundary)
+    Helpers.expect.equality(result[1].skills, { "$review-agent" })
 end
 
 T["commands.apply()"]["#scoped attaches without creating a task"] = function()
@@ -178,17 +271,20 @@ T["commands.apply()"]["#scoped attaches without creating a task"] = function()
     Helpers.expect.equality(result[1].special_instruction, nil)
 end
 
-T["commands.apply()"]["modifier overrides an attribute without changing special instructions"] = function()
+T["commands.apply()"]["modifier composes boundaries without changing special instructions"] = function()
     child.lua([[
         require("nvimcodex.prompt.commands").list.example = {
             primary_goal = "Do the requested work.",
-            primary_boundaries = "Edit any file.",
+            primary_boundaries = "Keep existing safeguards.",
             special_instruction = "Follow project conventions.",
         }
     ]])
     local result = child.lua_get([[_G.apply("@example #scoped change this")]])
     Helpers.expect.equality(result[1].attributes.goal, "Do the requested work.")
-    Helpers.expect.equality(result[1].attributes.boundaries, scoped_boundary)
+    Helpers.expect.equality(
+        result[1].attributes.boundaries,
+        "Keep existing safeguards. " .. scoped_boundary
+    )
     Helpers.expect.equality(result[1].special_instruction, "Follow project conventions.")
 end
 

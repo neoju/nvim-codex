@@ -19,6 +19,8 @@ T["format.render()"]["renders General before higher-priority attributes"] = func
             {
                 location = "lua/foo.lua:L3",
                 value = "request",
+                files = {},
+                skills = {},
                 attributes = {
                     goal = "Answer this.",
                     output = "A summary.",
@@ -50,7 +52,9 @@ end
 
 T["format.render()"]["returns a plain request without instructions"] = function()
     local result = child.lua_get([[
-        require("nvimcodex.prompt.format").render({ { location = "", value = "request" } })
+        require("nvimcodex.prompt.format").render({
+            { location = "", value = "request", files = {}, skills = {}, attributes = {} },
+        })
     ]])
     Helpers.expect.equality(result, "request")
 end
@@ -60,6 +64,9 @@ T["format.render()"]["keeps multiline General text inside its section"] = functi
         require("nvimcodex.prompt.format").render({
             {
                 value = "request",
+                location = "",
+                files = {},
+                skills = {},
                 special_instruction = "First line.\n\nGoal: This is still general text.\nLast line.",
                 attributes = { goal = "This is the primary goal." },
             },
@@ -74,7 +81,13 @@ end
 T["format.render()"]["renders file lists in Context"] = function()
     local result = child.lua_get([[
         require("nvimcodex.prompt.format").render({
-            { files = { "src/main.lua", "tests/test_main.lua" }, value = "request" },
+            {
+                files = { "src/main.lua", "tests/test_main.lua" },
+                value = "request",
+                location = "",
+                skills = {},
+                attributes = {},
+            },
         })
     ]])
     Helpers.expect.equality(

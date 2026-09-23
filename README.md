@@ -111,7 +111,12 @@ registered automatically for the prompt. Available entries are:
 | `$<skill>` | Include a Codex skill. Project skills take precedence over user and plugin skills. |
 | `@buffer` | Target the current file, without a line range. |
 | `@ask` | Ask Codex to answer without editing files. |
+| `@diagnose` | Investigate a problem and report its cause without editing files. |
 | `@explain` | Ask Codex to explain the selected code and its surrounding context. |
+| `@fix` | Diagnose, fix, and verify the reported behavior. |
+| `@test` | Add meaningful tests for selected behavior and report coverage. |
+| `#brief` | Keep the response brief. |
+| `#readonly` | Prevent file edits for the current task. |
 | `#scoped` | Attach an edit boundary to the current task. |
 
 For definition syntax and task behavior, see [Prompt definitions](doc/prompt-definitions.md).

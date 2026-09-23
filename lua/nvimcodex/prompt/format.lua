@@ -9,11 +9,11 @@ function M.render(tasks)
     local only_task = tasks[1]
     if
         #tasks == 1
-        and not only_task.attributes
+        and next(only_task.attributes) == nil
         and not only_task.special_instruction
-        and (not only_task.skills or #only_task.skills == 0)
-        and (not only_task.files or #only_task.files == 0)
-        and (not only_task.location or only_task.location == "")
+        and #only_task.skills == 0
+        and #only_task.files == 0
+        and only_task.location == ""
     then
         return only_task.value
     end
@@ -38,7 +38,7 @@ function M.render(tasks)
         end
 
         for _, attribute in ipairs({ "goal", "output", "boundaries" }) do
-            local content = task.attributes and task.attributes[attribute]
+            local content = task.attributes[attribute]
             if content then
                 local label = attribute:sub(1, 1):upper() .. attribute:sub(2)
 
@@ -46,8 +46,8 @@ function M.render(tasks)
             end
         end
 
-        local files = task.files or {}
-        if #files == 0 and task.location and task.location ~= "" then
+        local files = task.files
+        if #files == 0 and task.location ~= "" then
             files = { task.location }
         end
 
@@ -59,7 +59,7 @@ function M.render(tasks)
             table.insert(lines, "- " .. path)
         end
 
-        for i, skill in ipairs(task.skills or {}) do
+        for i, skill in ipairs(task.skills) do
             if i == 1 then
                 table.insert(lines, "Skills:")
             end

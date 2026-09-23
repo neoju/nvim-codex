@@ -1,7 +1,6 @@
 local log = require("nvimcodex.log")
 
 local commands = { list = {}, modifiers = {} }
-local attributes = { "goal", "output", "boundaries" }
 local modifier_fields = {
     description = true,
     des = true,
@@ -45,14 +44,14 @@ for kind, definitions in pairs({ commands = commands.list, modifiers = commands.
 end
 
 local function parse_tokens(text)
-    local tasks = {}
-    local pending = { definitions = {}, skills = {} }
-    local current
+    local tasks = { { definitions = {}, skills = {} } }
+    local current = tasks[1]
+    local has_command = false
 
     text = text:gsub("[@#$][%w_:%-]+", function(token)
         local prefix, name = token:sub(1, 1), token:sub(2)
         if prefix == "$" then
-            table.insert((current or pending).skills, token)
+            table.insert(current.skills, token)
             return ""
         end
 
@@ -62,29 +61,24 @@ local function parse_tokens(text)
         end
 
         if prefix == "@" then
-            current = { definitions = { { name = name, prefix = prefix } }, skills = {} }
-
-            if #tasks == 0 then
-                vim.list_extend(current.definitions, pending.definitions)
-                current.skills = pending.skills
+            if has_command then
+                current = { definitions = {}, skills = {} }
+                table.insert(tasks, current)
             end
-
-            table.insert(tasks, current)
+            table.insert(current.definitions, 1, { name = name, prefix = prefix })
+            has_command = true
         else
-            table.insert((current or pending).definitions, { name = name, prefix = prefix })
+            table.insert(current.definitions, { name = name, prefix = prefix })
         end
 
         return ""
     end)
 
-    if #tasks == 0 then
-        tasks[1] = pending
-    end
-
     return tasks, text
 end
 
 local function apply_definitions(task, definitions, ctx, value)
+    local applied_boundaries = {}
     for _, definition in ipairs(definitions) do
         local registry = definition.prefix == "@" and commands.list or commands.modifiers
         local command = registry[definition.name]
@@ -105,11 +99,7 @@ local function apply_definitions(task, definitions, ctx, value)
             task.location = ctx[command.location] or ""
         end
 
-        if
-            command.requires_context
-            and task.location == ""
-            and (not task.files or #task.files == 0)
-        then
+        if command.requires_context and task.location == "" and #task.files == 0 then
             log.notify(
                 "commands",
                 vim.log.levels.ERROR,
@@ -123,12 +113,14 @@ local function apply_definitions(task, definitions, ctx, value)
             task.value = ""
         end
 
-        for _, attribute in ipairs(attributes) do
-            local field = "primary_" .. attribute
-            if command[field] then
-                task.attributes = task.attributes or {}
-                task.attributes[attribute] = command[field]
-            end
+        task.attributes.goal = command.primary_goal or task.attributes.goal
+        task.attributes.output = command.primary_output or task.attributes.output
+
+        local boundary = command.primary_boundaries
+        if boundary and not applied_boundaries[boundary] then
+            local previous = task.attributes.boundaries
+            task.attributes.boundaries = previous and (previous .. " " .. boundary) or boundary
+            applied_boundaries[boundary] = true
         end
 
         if command.special_instruction then
@@ -148,8 +140,9 @@ function commands.apply(ctx, text)
         local task = {
             value = value,
             location = ctx.location or "",
-            files = ctx.files and vim.list_extend({}, ctx.files) or nil,
+            files = vim.list_extend({}, ctx.files or {}),
             skills = entry.skills,
+            attributes = {},
         }
 
         if not apply_definitions(task, entry.definitions, ctx, value) then
