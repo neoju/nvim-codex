@@ -12,7 +12,7 @@ function source.enabled()
 end
 
 function source.get_trigger_characters()
-    return { "$", "@" }
+    return { "$", "@", "#" }
 end
 
 local function completion_item_kind()
@@ -43,26 +43,27 @@ local function skill_items()
         local text = "$" .. skill.name
         table.insert(items, {
             label = text,
-            insertText = text,
+            insertText = text .. " ",
             filterText = text,
-            kind = kind.Function,
+            kind = kind.Text,
             labelDetails = label_details(skill.description),
         })
     end
     return items
 end
 
-local function command_items()
+local function definition_items(prefix, definitions)
     local kind = completion_item_kind()
+    local item_kind = prefix == "#" and kind.Property or kind.Keyword
     local items = {}
-    for name, command in pairs(commands.list) do
-        local text = "@" .. name
+    for name, definition in pairs(definitions) do
+        local text = prefix .. name
         table.insert(items, {
             label = text,
-            insertText = text,
+            insertText = text .. " ",
             filterText = text,
-            kind = kind.Keyword,
-            labelDetails = label_details(command.description),
+            kind = item_kind,
+            labelDetails = label_details(definition.description),
         })
     end
     table.sort(items, function(a, b)
@@ -77,7 +78,9 @@ function source.get_completions(_, ctx, callback)
     if char == "$" then
         items = skill_items()
     elseif char == "@" then
-        items = command_items()
+        items = definition_items(char, commands.list)
+    elseif char == "#" then
+        items = definition_items(char, commands.modifiers)
     else
         items = {}
     end

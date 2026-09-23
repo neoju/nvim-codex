@@ -66,6 +66,10 @@ If no matching Codex pane is found, the plugin shows a warning. Check that
 Codex is running, that both panes share a tmux window, and that their working
 directories match.
 
+### Examples
+
+Update later
+
 ## Configuration
 
 With LazyVim, add `lua/plugins/nvim-codex.lua`:
@@ -108,6 +112,9 @@ registered automatically for the prompt. Available entries are:
 | `@buffer` | Target the current file, without a line range. |
 | `@ask` | Ask Codex to answer without editing files. |
 | `@explain` | Ask Codex to explain the selected code and its surrounding context. |
+| `#scoped` | Attach an edit boundary to the current task. |
+
+For definition syntax and task behavior, see [Prompt definitions](doc/prompt-definitions.md).
 
 Skills are loaded when the prompt first opens and refreshed after `DirChanged`.
 To rescan them manually, run `:lua require("nvimcodex").reload_skills()`.

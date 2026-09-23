@@ -40,7 +40,7 @@ T["blink source"]["$ trigger yields skill items"] = function()
     Helpers.expect.equality(#result.items, 1)
     local item = result.items[1]
     Helpers.expect.equality(item.label, "$alpha")
-    Helpers.expect.equality(item.insertText, "$alpha")
+    Helpers.expect.equality(item.insertText, "$alpha ")
     Helpers.expect.equality(item.filterText, "$alpha")
     Helpers.expect.equality(item.documentation, nil)
     Helpers.expect.equality(item.labelDetails.description, "Alpha skill")
@@ -54,11 +54,22 @@ T["blink source"]["@ trigger yields command items"] = function()
         return item.label
     end, result.items)
     Helpers.expect.equality(labels, { "@ask", "@buffer", "@explain" })
+    Helpers.expect.equality(result.items[1].insertText, "@ask ")
     Helpers.expect.equality(result.items[1].documentation, nil)
     Helpers.expect.equality(
         result.items[1].labelDetails.description,
         require("nvimcodex.prompt.commands").list.ask.description
     )
+end
+
+T["blink source"]["# trigger yields attachment items"] = function()
+    local result = child.lua_get([[_G.get("#", 2)]])
+    local labels = vim.tbl_map(function(item)
+        return item.label
+    end, result.items)
+    Helpers.expect.equality(labels, { "#scoped" })
+    Helpers.expect.equality(result.items[1].insertText, "#scoped ")
+    Helpers.expect.equality(result.items[1].kind, vim.lsp.protocol.CompletionItemKind.Property)
 end
 
 T["blink source"]["other text yields no items"] = function()

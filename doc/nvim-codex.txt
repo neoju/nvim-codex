@@ -123,17 +123,9 @@ resulting prompt to the Codex tmux pane.
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                              *commands.apply()*
-                        `commands.apply`({ctx}, {text})
-Rewrites `ctx` for each known `@name` token in `text`, strips those tokens,
-and returns `ctx, cleaned_text`. Unknown `@foo` tokens are left untouched.
-
-
-==============================================================================
-------------------------------------------------------------------------------
                                                                     *M.render()*
-                               `M.render`({ctx})
-Renders a prompt context into the text sent to Codex. Pure function.
+                              `M.render`({tasks})
+Renders tasks into the text sent to Codex. Pure function.
 
 
 ==============================================================================
