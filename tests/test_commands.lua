@@ -55,6 +55,49 @@ T["commands.apply()"]["@ask wraps the request as a read-only question"] = functi
     Helpers.expect.equality(result[1].value, "what does this do")
 end
 
+T["commands.apply()"]["loads diagnosis, fix, and test presets"] = function()
+    local result = child.lua_get([[_G.apply("@diagnose @fix @test failing behavior")]])
+    Helpers.expect.equality(#result, 3)
+    Helpers.expect.equality(
+        result[1].attributes.goal,
+        "Diagnose the reported behavior and identify its cause."
+    )
+    Helpers.expect.equality(result[1].attributes.boundaries, "Do not modify files.")
+    Helpers.expect.equality(result[2].attributes.goal, "Fix the reported behavior.")
+    Helpers.expect.equality(
+        result[3].attributes.goal,
+        "Add meaningful tests for the selected behavior and report what they cover."
+    )
+end
+
+T["commands.apply()"]["#brief replaces output while #readonly keeps other attributes"] = function()
+    local result = child.lua_get([[_G.apply("@fix #brief #readonly failing behavior")]])
+    Helpers.expect.equality(result[1].attributes.goal, "Fix the reported behavior.")
+    Helpers.expect.equality(result[1].attributes.output, "Keep the response brief.")
+    Helpers.expect.equality(result[1].attributes.boundaries, "Do not modify files.")
+end
+
+T["commands.apply()"]["#scoped keeps @ask read-only with selected files"] = function()
+    local result = child.lua_get([[(function()
+        return require("nvimcodex.prompt.commands").apply({
+            filepath = "lua/foo.lua",
+            location = "lua/foo.lua:L3",
+            files = { "one.lua" },
+        }, "@ask #scoped what does this do")
+    end)()]])
+    Helpers.expect.equality(result[1].location, "")
+    Helpers.expect.equality(result[1].files, { "one.lua" })
+    Helpers.expect.equality(
+        result[1].attributes.boundaries,
+        "Do not modify files. " .. scoped_boundary
+    )
+end
+
+T["commands.apply()"]["#readonly does not duplicate an existing read-only boundary"] = function()
+    local result = child.lua_get([[_G.apply("@ask #readonly what does this do")]])
+    Helpers.expect.equality(result[1].attributes.boundaries, "Do not modify files.")
+end
+
 T["commands.apply()"]["@ask without a question logs an error and cancels the prompt"] = function()
     child.lua([[
         _G.notifications = {}
@@ -178,17 +221,20 @@ T["commands.apply()"]["#scoped attaches without creating a task"] = function()
     Helpers.expect.equality(result[1].special_instruction, nil)
 end
 
-T["commands.apply()"]["modifier overrides an attribute without changing special instructions"] = function()
+T["commands.apply()"]["modifier composes boundaries without changing special instructions"] = function()
     child.lua([[
         require("nvimcodex.prompt.commands").list.example = {
             primary_goal = "Do the requested work.",
-            primary_boundaries = "Edit any file.",
+            primary_boundaries = "Keep existing safeguards.",
             special_instruction = "Follow project conventions.",
         }
     ]])
     local result = child.lua_get([[_G.apply("@example #scoped change this")]])
     Helpers.expect.equality(result[1].attributes.goal, "Do the requested work.")
-    Helpers.expect.equality(result[1].attributes.boundaries, scoped_boundary)
+    Helpers.expect.equality(
+        result[1].attributes.boundaries,
+        "Keep existing safeguards. " .. scoped_boundary
+    )
     Helpers.expect.equality(result[1].special_instruction, "Follow project conventions.")
 end
 

@@ -127,7 +127,12 @@ local function apply_definitions(task, definitions, ctx, value)
             local field = "primary_" .. attribute
             if command[field] then
                 task.attributes = task.attributes or {}
-                task.attributes[attribute] = command[field]
+                local previous = task.attributes[attribute]
+                if attribute == "boundaries" and previous and previous ~= command[field] then
+                    task.attributes[attribute] = previous .. " " .. command[field]
+                else
+                    task.attributes[attribute] = command[field]
+                end
             end
         end
 

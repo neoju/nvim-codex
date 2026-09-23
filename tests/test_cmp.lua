@@ -53,7 +53,7 @@ T["blink source"]["@ trigger yields command items"] = function()
     local labels = vim.tbl_map(function(item)
         return item.label
     end, result.items)
-    Helpers.expect.equality(labels, { "@ask", "@buffer", "@explain" })
+    Helpers.expect.equality(labels, { "@ask", "@buffer", "@diagnose", "@explain", "@fix", "@test" })
     Helpers.expect.equality(result.items[1].insertText, "@ask ")
     Helpers.expect.equality(result.items[1].documentation, nil)
     Helpers.expect.equality(
@@ -67,8 +67,8 @@ T["blink source"]["# trigger yields attachment items"] = function()
     local labels = vim.tbl_map(function(item)
         return item.label
     end, result.items)
-    Helpers.expect.equality(labels, { "#scoped" })
-    Helpers.expect.equality(result.items[1].insertText, "#scoped ")
+    Helpers.expect.equality(labels, { "#brief", "#readonly", "#scoped" })
+    Helpers.expect.equality(result.items[1].insertText, "#brief ")
     Helpers.expect.equality(result.items[1].kind, vim.lsp.protocol.CompletionItemKind.Property)
 end
 
