@@ -113,7 +113,7 @@ registered automatically for the prompt. Available entries are:
 | `@ask` | Ask Codex to answer without editing files. |
 | `@diagnose` | Investigate a problem and report its cause without editing files. |
 | `@explain` | Ask Codex to explain the selected code and its surrounding context. |
-| `@fix` | Fix the reported behavior. |
+| `@fix` | Diagnose, fix, and verify the reported behavior. |
 | `@test` | Add meaningful tests for selected behavior and report coverage. |
 | `#brief` | Keep the response brief. |
 | `#readonly` | Prevent file edits for the current task. |

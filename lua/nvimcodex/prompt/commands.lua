@@ -85,6 +85,7 @@ local function parse_tokens(text)
 end
 
 local function apply_definitions(task, definitions, ctx, value)
+    local applied_boundaries = {}
     for _, definition in ipairs(definitions) do
         local registry = definition.prefix == "@" and commands.list or commands.modifiers
         local command = registry[definition.name]
@@ -127,9 +128,14 @@ local function apply_definitions(task, definitions, ctx, value)
             local field = "primary_" .. attribute
             if command[field] then
                 task.attributes = task.attributes or {}
-                local previous = task.attributes[attribute]
-                if attribute == "boundaries" and previous and previous ~= command[field] then
-                    task.attributes[attribute] = previous .. " " .. command[field]
+                if attribute == "boundaries" then
+                    if not applied_boundaries[command[field]] then
+                        local previous = task.attributes.boundaries
+                        task.attributes.boundaries = previous
+                                and (previous .. " " .. command[field])
+                            or command[field]
+                        applied_boundaries[command[field]] = true
+                    end
                 else
                     task.attributes[attribute] = command[field]
                 end

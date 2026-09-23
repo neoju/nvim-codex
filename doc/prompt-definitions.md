@@ -38,6 +38,7 @@ in parallel and consider separate worktrees for concurrent edits.
 The built-in commands are `@ask`, `@buffer`, `@diagnose`, `@explain`, `@fix`,
 and `@test`. The built-in modifiers are `#brief`, `#readonly`, and `#scoped`.
 `@diagnose` and `@ask` keep the task read-only even when `#scoped` is attached.
+`@fix` asks for diagnosis, a fix, and verification of the change.
 `@test` asks for meaningful tests of the selected behavior and a report of
 what they cover.
 
