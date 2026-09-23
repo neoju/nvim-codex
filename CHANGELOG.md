@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.0](https://github.com/neoju/nvim-codex/compare/v1.2.0...v1.3.0) (2026-09-23)
+
+
+### Features
+
+* add prompt presets and compose boundaries ([713b65e](https://github.com/neoju/nvim-codex/commit/713b65e9f36444f3b54f15d690753256f03d25b7))
+* add prompt presets and simplify task parsing ([2e2ac05](https://github.com/neoju/nvim-codex/commit/2e2ac05a2486bb038090d159819197e32c792c62))
+
+
+### Bug Fixes
+
+* verify fix workflow and deduplicate prompt boundaries ([570bfc1](https://github.com/neoju/nvim-codex/commit/570bfc1cfc55d1ed481ddd1ee56a370dedc42435))
+
 ## [1.2.0](https://github.com/neoju/nvim-codex/compare/v1.1.1...v1.2.0) (2026-09-23)
 
 
