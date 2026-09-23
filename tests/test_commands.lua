@@ -37,7 +37,13 @@ T["commands.apply()"] = MiniTest.new_set()
 
 T["commands.apply()"]["returns one task without a command"] = function()
     Helpers.expect.equality(child.lua_get([[_G.apply("plain request")]]), {
-        { value = "plain request", location = "lua/foo.lua:L3", skills = {} },
+        {
+            value = "plain request",
+            location = "lua/foo.lua:L3",
+            files = {},
+            skills = {},
+            attributes = {},
+        },
     })
 end
 
@@ -185,13 +191,16 @@ T["commands.apply()"]["applies multiple tokens"] = function()
         {
             value = "summarize",
             location = "lua/foo.lua",
+            files = {},
             skills = {},
+            attributes = {},
         },
         {
             attributes = ask_attributes,
             special_instruction = "Explain the reasoning when it helps answer the question.",
             value = "summarize",
             location = "",
+            files = {},
             skills = {},
         },
     })
@@ -204,6 +213,7 @@ T["commands.apply()"]["attaches scoped instructions only to its command"] = func
             attributes = { boundaries = scoped_boundary },
             value = "summarize",
             location = "lua/foo.lua",
+            files = {},
             skills = {},
         },
         {
@@ -211,12 +221,14 @@ T["commands.apply()"]["attaches scoped instructions only to its command"] = func
             special_instruction = "Explain the reasoning when it helps answer the question.",
             value = "summarize",
             location = "",
+            files = {},
             skills = {},
         },
         {
             attributes = explain_attributes,
             value = "",
             location = "lua/foo.lua:L3",
+            files = {},
             skills = { "$my-skill" },
         },
     })
@@ -241,11 +253,12 @@ T["commands.apply()"]["keeps file lists separate between tasks"] = function()
     Helpers.expect.equality(result, "one.lua")
 end
 
-T["commands.apply()"]["#scoped before @buffer attaches to the first task"] = function()
-    local result = child.lua_get([[_G.apply("#scoped @buffer change this")]])
+T["commands.apply()"]["leading modifier and skill attach to the first command"] = function()
+    local result = child.lua_get([[_G.apply("$review-agent #scoped @buffer change this")]])
     Helpers.expect.equality(result[1].location, "lua/foo.lua")
     Helpers.expect.equality(result[1].value, "change this")
     Helpers.expect.equality(result[1].attributes.boundaries, scoped_boundary)
+    Helpers.expect.equality(result[1].skills, { "$review-agent" })
 end
 
 T["commands.apply()"]["#scoped attaches without creating a task"] = function()
