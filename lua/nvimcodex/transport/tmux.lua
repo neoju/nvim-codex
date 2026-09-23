@@ -115,7 +115,11 @@ function tmux.send(text, path)
     end
 
     if config.options.auto_send then
+        -- Let tmux finish pasting before sending Enter;
+        -- sending too quickly can overlap the paste.
         vim.wait(50)
+        send_enter(pane_id)
+        -- A trailing Codex skill or slash command may need a second Enter to submit.
         send_enter(pane_id)
     end
 
