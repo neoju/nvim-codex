@@ -8,7 +8,6 @@ Nvimcodex.options	nvim-codex.txt	/*Nvimcodex.options*
 Nvimcodex.reload_skills()	nvim-codex.txt	/*Nvimcodex.reload_skills()*
 Nvimcodex.send()	nvim-codex.txt	/*Nvimcodex.send()*
 Nvimcodex.setup()	nvim-codex.txt	/*Nvimcodex.setup()*
-commands.apply()	nvim-codex.txt	/*commands.apply()*
 label_details()	nvim-codex.txt	/*label_details()*
 parse_frontmatter()	nvim-codex.txt	/*parse_frontmatter()*
 register_blink()	nvim-codex.txt	/*register_blink()*

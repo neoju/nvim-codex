@@ -3,7 +3,6 @@ local M = {}
 local separate_tasks_guidance = "\z
     Treat these as separate tasks. Run non-conflicting tasks in parallel; \z
     run conflicting tasks sequentially. For concurrent edits, consider separate worktrees."
-local attributes = { "goal", "context", "output", "boundaries" }
 
 --- Renders tasks into the text sent to Codex. Pure function.
 function M.render(tasks)
@@ -38,19 +37,26 @@ function M.render(tasks)
             table.insert(lines, "General: " .. task.special_instruction:gsub("\n", "\n  "))
         end
 
-        local files = task.files and #task.files > 0 and task.files
-            or (task.location and task.location ~= "" and { task.location } or {})
-        for _, attribute in ipairs(attributes) do
+        for _, attribute in ipairs({ "goal", "output", "boundaries" }) do
             local content = task.attributes and task.attributes[attribute]
-            if content or (attribute == "context" and #files > 0) then
+            if content then
                 local label = attribute:sub(1, 1):upper() .. attribute:sub(2)
-                table.insert(lines, label .. ":" .. (content and " " .. content or ""))
-                if attribute == "context" then
-                    for _, path in ipairs(files) do
-                        table.insert(lines, "- " .. path)
-                    end
-                end
+
+                table.insert(lines, label .. ": " .. content)
             end
+        end
+
+        local files = task.files or {}
+        if #files == 0 and task.location and task.location ~= "" then
+            files = { task.location }
+        end
+
+        for i, path in ipairs(files) do
+            if i == 1 then
+                table.insert(lines, "Context:")
+            end
+
+            table.insert(lines, "- " .. path)
         end
 
         for i, skill in ipairs(task.skills or {}) do

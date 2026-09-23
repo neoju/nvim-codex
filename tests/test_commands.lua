@@ -9,7 +9,6 @@ local ask_attributes = {
 }
 local explain_attributes = {
     goal = "Explain the selected code and the surrounding implementation.",
-    context = "Use the selected code and its relevant surrounding implementation.",
     output = "Describe its purpose, control flow, relevant callers or dependencies, and effects.",
     boundaries = "Do not modify files.",
 }
@@ -104,14 +103,11 @@ T["commands.apply()"]["applies multiple tokens"] = function()
     local result = child.lua_get([[_G.apply("@buffer @ask summarize")]])
     Helpers.expect.equality(result, {
         {
-            name = "buffer",
             value = "summarize",
             location = "lua/foo.lua",
             skills = {},
-            attributes = { context = "Use the whole current file." },
         },
         {
-            name = "ask",
             attributes = ask_attributes,
             special_instruction = "Explain the reasoning when it helps answer the question.",
             value = "summarize",
@@ -125,14 +121,12 @@ T["commands.apply()"]["attaches scoped instructions only to its command"] = func
     local result = child.lua_get([[_G.apply("@buffer #scoped @ask @explain summarize $my-skill")]])
     Helpers.expect.equality(result, {
         {
-            name = "buffer",
-            attributes = { context = "Use the whole current file.", boundaries = scoped_boundary },
+            attributes = { boundaries = scoped_boundary },
             value = "summarize",
             location = "lua/foo.lua",
             skills = {},
         },
         {
-            name = "ask",
             attributes = ask_attributes,
             special_instruction = "Explain the reasoning when it helps answer the question.",
             value = "summarize",
@@ -140,7 +134,6 @@ T["commands.apply()"]["attaches scoped instructions only to its command"] = func
             skills = {},
         },
         {
-            name = "explain",
             attributes = explain_attributes,
             value = "",
             location = "lua/foo.lua:L3",
@@ -178,7 +171,7 @@ end
 T["commands.apply()"]["#scoped attaches without creating a task"] = function()
     local result = child.lua_get([[_G.apply("@buffer #scoped change this")]])
     Helpers.expect.equality(#result, 1)
-    Helpers.expect.equality(result[1].name, "buffer")
+    Helpers.expect.equality(result[1].name, nil)
     Helpers.expect.equality(result[1].location, "lua/foo.lua")
     Helpers.expect.equality(result[1].value, "change this")
     Helpers.expect.equality(result[1].attributes.boundaries, scoped_boundary)

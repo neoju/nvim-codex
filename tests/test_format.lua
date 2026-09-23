@@ -21,7 +21,6 @@ T["format.render()"]["renders General before higher-priority attributes"] = func
                 value = "request",
                 attributes = {
                     goal = "Answer this.",
-                    context = "Use the selection.",
                     output = "A summary.",
                     boundaries = "Do not edit.",
                 },
@@ -36,10 +35,10 @@ T["format.render()"]["renders General before higher-priority attributes"] = func
             "<INSTRUCTIONS>",
             "General: Edit the file.",
             "Goal: Answer this.",
-            "Context: Use the selection.",
-            "- lua/foo.lua:L3",
             "Output: A summary.",
             "Boundaries: Do not edit.",
+            "Context:",
+            "- lua/foo.lua:L3",
             "</INSTRUCTIONS>",
             "",
             "<USER_PROMPT>",
@@ -96,10 +95,7 @@ T["format.render()"]["keeps each task's attributes and skills separate"] = funct
     local blocks =
         vim.split(result, "\n---------------------------------------------\n", { plain = true })
     Helpers.expect.equality(#blocks, 2)
-    Helpers.expect.equality(
-        blocks[1]:find("Context: Use the whole current file.\n- lua/foo.lua", 1, true) ~= nil,
-        true
-    )
+    Helpers.expect.equality(blocks[1]:find("Context:\n- lua/foo.lua", 1, true) ~= nil, true)
     Helpers.expect.equality(
         blocks[1]:find("Boundaries: Only edit within the provided context.", 1, true) ~= nil,
         true
